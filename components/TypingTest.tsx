@@ -511,28 +511,40 @@ const TypingTest: React.FC = () => {
       }
       const isCurrent = index === inputChars.length;
       let cursorClass = '';
-      if (isCurrent) {
-        if (isTcs) {
-          if (settings.highlight) {
+
+      // If Highlight is OFF, we override colors to be Simple Black/None
+      if (!settings.highlight) {
+        bgClass = 'bg-transparent';
+        colorClass = 'text-black';
+
+        if (isCurrent) {
+          // Minimal cursor
+          cursorClass = 'border-l-2 border-black animate-pulse -ml-[1px]';
+        } else if (isError) {
+          // Subtle error indication or none? "simple sa" -> maybe just text color
+          // Let's keep errors red but NO background
+          colorClass = 'text-red-600 font-bold';
+        }
+      } else {
+        // Highlight ON: Standard Logic
+        if (isCurrent) {
+          if (isTcs) {
             bgClass = 'bg-yellow-400';
             colorClass = 'text-black font-bold';
           } else {
-            // No highlight, just cursor or minimal
-            bgClass = 'bg-transparent';
-            colorClass = 'text-black font-bold border-l-2 border-black animate-pulse -ml-[1px] pl-[1px]';
+            cursorClass = 'border-l-2 border-brand-purple animate-pulse';
           }
         } else {
-          cursorClass = 'border-l-2 border-brand-purple animate-pulse';
-        }
-      } else {
-        // Future text color - make it darker for TCS
-        if (!inputChars[index]) {
-          colorClass = 'text-gray-900'; // Darker than gray-700
+          // Future chars match standard logic (gray/dark)
+          if (!inputChars[index]) {
+            colorClass = 'text-gray-900';
+          }
         }
       }
+
       return (
         <span key={index} className={`relative ${colorClass} ${bgClass} ${cursorClass}`}>
-          {char === ' ' && isError ? '_' : char}
+          {char === ' ' && isError && settings.highlight ? '_' : char}
         </span>
       );
     });
@@ -984,7 +996,7 @@ const TypingTest: React.FC = () => {
               value={inputText}
               onChange={handleInput}
               onPaste={handlePaste}
-              className={`flex-grow w-full p-4 resize-none focus:outline-none focus:bg-[#fcffff] transition-colors ${getFontSizeClass()} ${settings.fontFamily === 'mangal' ? 'font-mangal' : 'font-mono'}`}
+              className={`flex-grow w-full p-4 resize-none focus:outline-none focus:bg-[#fcffff] transition-colors text-black font-medium ${getFontSizeClass()} ${settings.fontFamily === 'mangal' ? 'font-mangal' : 'font-mono'}`}
               spellCheck={false}
             />
           </div>
