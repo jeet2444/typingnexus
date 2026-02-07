@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Admin Subdomain Logic: If accessing via admin.typingnexus.in, route to /admin folder
+  RewriteCond %{HTTP_HOST} ^admin\.typingnexus\.in$ [NC]
+  RewriteCond %{REQUEST_URI} !^/admin/
+  RewriteRule ^(.*)$ /admin/$1 [L]
+
+  # 2. Exclude /admin directory from Main React App (so it doesn't load main site)
+  RewriteRule ^admin - [L,NC]
+
+  # 3. Main React App Routing (typingnexus.in)
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-l
+  RewriteRule . /index.html [L]
+</IfModule>
