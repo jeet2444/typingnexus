@@ -533,32 +533,22 @@ const TypingTest: React.FC = () => {
         bgClass = 'bg-transparent';
         colorClass = 'text-black'; // Default all text to black
 
-        // Ensure even past characters are black, overruling the logic above
+        // Ensure even past characters are black
         if (index < inputChars.length) {
-          // Do nothing, keep it black. 
-          // Logic above sets colorClass to green/red, so we MUST override it here.
-          // Or better, wrap the initial coloring logic in `if (settings.highlight)`.
-          // But since I am editing this block, I will just force it here.
           colorClass = 'text-black';
         }
 
-        if (isCurrent && settings.showCursor) {
-          // Minimal cursor
-          cursorClass = 'border-l-2 border-black animate-pulse -ml-[1px]';
-        }
+        // NO CURSOR in Original Text as per user request
       } else {
         // Highlight ON: Standard Logic reuse
-        // The logic above (lines 496-510) already sets green/red
-        // We just need to handle the Current and Future chars here
-        if (isCurrent && settings.showCursor) {
+        if (isCurrent) {
           if (isTcs) {
             bgClass = 'bg-yellow-400';
             colorClass = 'text-black font-bold';
-          } else {
-            cursorClass = 'border-l-2 border-brand-purple animate-pulse';
           }
+          // NO CURSOR in Original Text
         } else {
-          // Future text color - make it darker for TCS if not already set
+          // Future text color
           if (!inputChars[index]) {
             colorClass = 'text-gray-900';
           }
@@ -566,7 +556,7 @@ const TypingTest: React.FC = () => {
       }
 
       return (
-        <span key={index} className={`relative ${colorClass} ${bgClass} ${cursorClass}`}>
+        <span key={index} className={`relative ${colorClass} ${bgClass}`}>
           {char === ' ' && isError && settings.highlight ? '_' : char}
         </span>
       );
@@ -998,7 +988,7 @@ const TypingTest: React.FC = () => {
               value={inputText}
               onChange={handleInput}
               onPaste={handlePaste}
-              className={`flex-grow w-full p-4 resize-none focus:outline-none focus:bg-[#fcffff] transition-colors text-black font-medium ${getFontSizeClass()} ${settings.fontFamily === 'mangal' ? 'font-mangal' : 'font-mono'}`}
+              className={`flex-grow w-full p-4 resize-none focus:outline-none focus:bg-[#fcffff] transition-colors text-black font-medium ${getFontSizeClass()} ${settings.fontFamily === 'mangal' ? 'font-mangal' : 'font-mono'} ${!settings.showCursor ? 'caret-transparent' : ''}`}
               spellCheck={false}
             />
           </div>
