@@ -4,8 +4,8 @@ import { LogIn, ShieldAlert, Lock, Mail, ArrowRight, User } from 'lucide-react';
 
 const AdminLogin: React.FC = () => {
     const { login, signup, isAdmin } = useAuth();
-    const [email, setEmail] = useState('Mahijeet');
-    const [password, setPassword] = useState('Ramjiram@555999');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
