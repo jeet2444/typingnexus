@@ -398,7 +398,7 @@ const TypingTest: React.FC = () => {
       backspaceCount,
       fullMistakes: errors,
       halfMistakes: 0,
-      timeTaken: `${Math.floor(timeSpentSeconds / 60).toString().padStart(2, '0')}:${(timeSpentSeconds % 60).toString().padStart(2, '0')} min`
+      timeTaken: `${Math.floor(timeSpentSeconds / 60)} min : ${(timeSpentSeconds % 60).toString().padStart(2, '0')} sec`
     });
     setNewBadges(badges);
     setShowResult(true);
