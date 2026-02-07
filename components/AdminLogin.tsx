@@ -81,18 +81,20 @@ const AdminLogin: React.FC = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+                <form onSubmit={handleSubmit} className="space-y-6" noValidate autoComplete="off">
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Identity</label>
                         <div className="relative group">
                             <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-brand-purple transition-colors" />
                             <input
                                 type="text"
+                                name="admin_username_field_no_autofill"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-600 outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition-all text-sm font-medium"
                                 placeholder="Username or Email"
                                 required
+                                autoComplete="off"
                             />
                         </div>
                     </div>
@@ -103,11 +105,13 @@ const AdminLogin: React.FC = () => {
                             <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-brand-purple transition-colors" />
                             <input
                                 type="password"
+                                name="admin_password_field_no_autofill"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-600 outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition-all text-sm font-medium"
                                 placeholder="Password"
                                 required
+                                autoComplete="new-password"
                             />
                         </div>
                     </div>
