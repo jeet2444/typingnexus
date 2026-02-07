@@ -2514,6 +2514,7 @@ const AdminPanel: React.FC = () => {
   const [store, setStore] = useState<any>(null); // Start null to detect load
   const [error, setError] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [realUserCount, setRealUserCount] = useState(0); // State for real user count
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -2537,6 +2538,20 @@ const AdminPanel: React.FC = () => {
     return () => window.removeEventListener('adminStoreUpdate', handleUpdate);
   }, []);
 
+  // Fetch real user count from Supabase for Dashboard
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      if (!error && count !== null) {
+        setRealUserCount(count);
+      }
+    };
+    fetchCount();
+  }, []);
+
   const handleReset = () => { localStorage.removeItem('ar_typing_admin_store'); window.location.reload(); };
 
   if (error) return <div className="p-10 text-red-600">Error: {error} <button onClick={handleReset}>Reset</button></div>;
@@ -2554,7 +2569,7 @@ const AdminPanel: React.FC = () => {
   const pendingEnquiries = (store.enquiries || []).filter((e: any) => e.status === 'New').length;
 
   const stats = [
-    { label: "Total Students", value: store.users?.length || 0, change: "+0%", icon: <Users size={20} className="text-blue-600" /> },
+    { label: "Total Students", value: realUserCount || store.users?.length || 0, change: "+0%", icon: <Users size={20} className="text-blue-600" /> },
     { label: "Revenue", value: `₹${totalRevenue.toLocaleString()}`, change: "+0%", icon: <DollarSign size={20} className="text-green-600" /> },
     { label: "Pending Enquiries", value: pendingEnquiries, change: pendingEnquiries > 0 ? "Action Req" : "All Clear", icon: <Inbox size={20} className="text-red-500" /> },
   ];
