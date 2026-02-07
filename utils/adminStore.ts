@@ -16,6 +16,7 @@ export interface AdminUser {
     authMethod: string;
     role: 'Super Admin' | 'Admin' | 'User' | 'Moderator';
     purchasedPackIds?: string[]; // IDs of ComboPacks purchased
+    last_seen?: string; // ISO Timestamp of last activity
 }
 
 export interface AdminRule {
@@ -50,6 +51,8 @@ export interface AdminExam {
     liveStatus?: 'Live' | 'Upcoming' | 'Past';
     liveDate?: string;
     status: 'Published' | 'Draft' | 'Archived';
+    content?: string;
+    contentTitle?: string;
 }
 
 export interface AdminPayment {
@@ -747,14 +750,22 @@ export const fetchAppUsers = async (): Promise<AdminUser[]> => {
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
-            .order('joined', { ascending: false });
+            .order('created_at', { ascending: false }); // Changed from 'joined' to 'created_at'
 
         if (error) {
             console.error("Error fetching app users:", error);
             return [];
         }
 
-        return data as AdminUser[];
+        return data.map((u: any) => ({
+            ...u,
+            joined: u.created_at || u.joined || new Date().toISOString(),
+            plan: u.plan || 'Free',
+            role: u.role || 'User',
+            status: u.status || 'Active',
+            authMethod: u.authMethod || 'Email',
+            purchasedPackIds: u.purchasedPackIds || []
+        })) as AdminUser[];
     } catch (e) {
         console.error("Exception fetching app users:", e);
         return [];

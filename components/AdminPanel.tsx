@@ -405,7 +405,9 @@ const ContentView: React.FC<{ exams: any[], setExams: any, rules: any[] }> = ({ 
   const [status, setStatus] = useState('Published');
   const [liveStatus, setLiveStatus] = useState<'Live' | 'Upcoming' | 'Past'>('Past');
   const [liveDate, setLiveDate] = useState('');
-  const [content, setContent] = useState(''); // Added Content Field!
+
+  const [content, setContent] = useState('');
+  const [contentTitle, setContentTitle] = useState(''); // Added Content Title Field
 
   const handleSave = () => {
     const rule = rules.find(r => r.id === Number(ruleId));
@@ -416,8 +418,10 @@ const ContentView: React.FC<{ exams: any[], setExams: any, rules: any[] }> = ({ 
       ruleId: Number(ruleId),
       status,
       liveStatus,
-      liveDate,
-      content, // Saving content
+
+
+      content,
+      contentTitle, // Saving content title
       plays: editingId ? exams.find(e => e.id === editingId)?.plays : 0
     };
 
@@ -427,7 +431,7 @@ const ContentView: React.FC<{ exams: any[], setExams: any, rules: any[] }> = ({ 
       const newId = exams.length > 0 ? Math.max(...exams.map(e => e.id)) + 1 : 1;
       setExams([...exams, { id: newId, ...examData }]);
     }
-    setShowAdd(false); setEditingId(null); setTitle(''); setContent(''); setLiveStatus('Past'); setLiveDate('');
+    setShowAdd(false); setEditingId(null); setTitle(''); setContent(''); setContentTitle(''); setLiveStatus('Past'); setLiveDate('');
   };
 
   const handleEdit = (exam: any) => {
@@ -439,6 +443,7 @@ const ContentView: React.FC<{ exams: any[], setExams: any, rules: any[] }> = ({ 
     setLiveStatus(exam.liveStatus || 'Past');
     setLiveDate(exam.liveDate || '');
     setContent(exam.content || '');
+    setContentTitle(exam.contentTitle || '');
     setShowAdd(true);
   };
 
@@ -446,7 +451,7 @@ const ContentView: React.FC<{ exams: any[], setExams: any, rules: any[] }> = ({ 
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-display font-bold">Exam Management</h2>
-        <button onClick={() => { setShowAdd(true); setEditingId(null); setContent(''); setTitle(''); }} className="bg-brand-black text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-800">
+        <button onClick={() => { setShowAdd(true); setEditingId(null); setContent(''); setContentTitle(''); setTitle(''); }} className="bg-brand-black text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-800">
           <Plus size={16} /> Add New Exam
         </button>
       </div>
@@ -461,6 +466,10 @@ const ContentView: React.FC<{ exams: any[], setExams: any, rules: any[] }> = ({ 
             <div>
               <label className="label-sm">Exam Title</label>
               <input type="text" placeholder="e.g. SSC CHSL Mains 2024" value={title} onChange={e => setTitle(e.target.value)} className="input-field bg-gray-900 border-gray-700 text-gray-200 focus:border-brand-purple" />
+            </div>
+            <div>
+              <label className="label-sm">Paragraph Title (Optional)</label>
+              <input type="text" placeholder="e.g. The Fox and Grapes" value={contentTitle} onChange={e => setContentTitle(e.target.value)} className="input-field bg-gray-900 border-gray-700 text-gray-200 focus:border-brand-purple" />
             </div>
             <div>
               <label className="label-sm text-gray-400">Linked Rule Set</label>
@@ -1330,6 +1339,12 @@ const BlogView: React.FC<{ blogs: any[], setBlogs: any }> = ({ blogs, setBlogs }
   );
 };
 
+const isUserOnline = (lastSeen?: string) => {
+  if (!lastSeen) return false;
+  const diff = new Date().getTime() - new Date(lastSeen).getTime();
+  return diff < 5 * 60 * 1000; // 5 minutes
+};
+
 const UsersView: React.FC<{ users: any[], setUsers: any, toggleUserStatus: (id: number) => void, deleteUser: (id: number) => void }> = ({ users: initialUsers, setUsers, toggleUserStatus, deleteUser }) => {
   const [appUsers, setAppUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1435,11 +1450,18 @@ const UsersView: React.FC<{ users: any[], setUsers: any, toggleUserStatus: (id: 
     setShowModal(false);
   };
 
+  const onlineCount = appUsers.filter(u => isUserOnline(u.last_seen)).length;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-display font-bold text-white">User Directory</h2>
+          <h2 className="text-2xl font-display font-bold text-white flex items-center gap-3">
+            User Directory
+            <span className="text-sm font-normal bg-gray-800 text-gray-400 px-2 py-1 rounded-full border border-gray-700 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> {onlineCount} Online
+            </span>
+          </h2>
           <p className="text-sm text-gray-400">{filteredUsers.length} users found</p>
         </div>
         <div className="flex gap-2">
@@ -1568,9 +1590,21 @@ const UsersView: React.FC<{ users: any[], setUsers: any, toggleUserStatus: (id: 
                   filteredUsers.map(user => (
                     <tr key={user.id} className="hover:bg-brand-purple/5 transition-all group">
                       <td className="px-6 py-4">
-                        <div className="font-bold text-gray-200 group-hover:text-white">{user.name}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-bold text-gray-200 group-hover:text-white">{user.name}</div>
+                          {isUserOnline(user.last_seen) && (
+                            <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" title="Online Now"></span>
+                          )}
+                        </div>
                         <div className="text-[10px] text-gray-500 font-mono uppercase tracking-tight">{user.email}</div>
-                        <div className="text-[10px] text-gray-600 mt-1">Joined: {new Date(user.joined).toLocaleDateString()}</div>
+                        <div className="text-[10px] text-gray-600 mt-1 flex gap-2">
+                          <span>Joined: {new Date(user.joined).toLocaleDateString()}</span>
+                          {user.last_seen && (
+                            <span className={isUserOnline(user.last_seen) ? "text-green-500 font-bold" : ""}>
+                              • Last seen: {new Date(user.last_seen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${user.plan && user.plan.includes('Pro') ? 'bg-brand-purple/20 text-brand-purple border-brand-purple/30' : 'bg-gray-800 text-gray-500 border-gray-700'}`}>

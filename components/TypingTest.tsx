@@ -118,6 +118,12 @@ const TypingTest: React.FC = () => {
         if (rule) {
           setTimeLeft(rule.duration * 60);
           setDifficulty(adminExam.difficulty as Difficulty);
+
+          // Set Passage Content if available in Admin Exam
+          if (adminExam.content) {
+            setPassageContent(adminExam.content);
+          }
+
           setSettings(prev => ({
             ...prev,
             backspace: rule.backspace === 'Enabled' ? 'on' : rule.backspace === 'Disabled' ? 'off' : 'limited',

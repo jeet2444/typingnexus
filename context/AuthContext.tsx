@@ -151,6 +151,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
     }, []);
 
+    // --- HEARTBEAT & LAST SEEN ---
+    useEffect(() => {
+        if (!currentUser || !currentUser.id) return;
+
+        const updateActivity = async () => {
+            try {
+                // Update 'last_seen' timestamp. If column fails, we catch error silently.
+                await supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', currentUser.id);
+            } catch (e) {
+                // console.warn("Could not update last_seen - column might be missing");
+            }
+        };
+
+        // Initial update on login
+        updateActivity();
+
+        // Periodic update every 2 minutes
+        const interval = setInterval(updateActivity, 2 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, [currentUser?.id]);
+
     const fetchProfile = async (uid: string, passedEmail?: string) => {
         try {
             let email = passedEmail || '';
