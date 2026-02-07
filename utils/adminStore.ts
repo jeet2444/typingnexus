@@ -619,9 +619,9 @@ export const saveAdminStore = async (data: AdminStore) => {
 
         if (data.settings) { // Simple check to ensure we have data
             try {
-                // CRITICAL: Always target the MAIN domain, even if on admin subdomain
-                const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
-                const saveUrl = isLocal ? '/save_settings.php' : 'https://typingnexus.in/save_settings.php';
+                // CRITICAL: Always target the MAIN domain to ensure sync
+                // We bypass the isLocal check because we want to update the LIVE site from the Admin Panel
+                const saveUrl = 'https://typingnexus.in/save_settings.php';
 
                 const response = await fetch(saveUrl, {
                     method: 'POST',

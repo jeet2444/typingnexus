@@ -238,7 +238,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
                 // Normal user fallback
                 if (error?.code === 'PGRST116' || !data) {
-                    const name = email ? email.split('@')[0] : 'User';
+                    const params = new URLSearchParams(window.location.hash.substring(1)); // Check hash too
+                    // Try to get name from metadata
+                    const { data: { user } } = await supabase.auth.getUser();
+                    const metaName = user?.user_metadata?.full_name || user?.user_metadata?.name;
+                    const name = metaName || (email ? email.split('@')[0] : 'User');
+
                     const newProfile = {
                         id: uid,
                         email,
@@ -246,9 +251,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         role: 'User',
                         plan: 'Free',
                         status: 'Active',
-                        joined: new Date().toLocaleDateString()
+                        joined: new Date().toLocaleDateString(),
+                        last_seen: new Date().toISOString()
                     };
-                    await supabase.from('profiles').insert([newProfile]);
+
+                    // Use Upsert to be safe against race conditions
+                    const { error: insertError } = await supabase.from('profiles').upsert([newProfile]);
+
+                    if (insertError) console.error("Profile creation error:", insertError);
+
                     setCurrentUser(newProfile as any);
                 }
                 return;
