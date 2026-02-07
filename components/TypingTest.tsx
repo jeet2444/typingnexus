@@ -490,74 +490,67 @@ const TypingTest: React.FC = () => {
   };
 
   const renderStandardText = () => {
-    const chars = splitByGraphemes(currentText, settings.language === 'hindi' ? 'hi' : 'en');
-    const inputChars = splitByGraphemes(inputText, settings.language === 'hindi' ? 'hi' : 'en');
-    return chars.map((char, index) => {
-      let colorClass = 'text-gray-400';
-      let bgClass = '';
-      let isError = false;
-      if (index < inputChars.length) {
-        if (inputChars[index] === char) {
-          // If highlight OFF, colorClass should already be black from below logic?
-          // No, this loop runs first.
-          if (!settings.highlight) {
-            colorClass = 'text-black';
-          } else {
-            colorClass = 'text-green-600 font-medium';
-          }
-        } else {
-          isError = true;
-          if (!settings.highlight) {
-            // If OFF, just black. No red/green background
-            colorClass = 'text-black';
-            bgClass = 'bg-transparent';
-          } else {
-            if (char === ' ') {
-              bgClass = 'bg-red-500/50';
-              colorClass = 'text-transparent';
-            } else {
-              colorClass = 'text-red-600 font-bold';
-              bgClass = 'bg-red-100';
-            }
-          }
-        }
-      } else {
-        colorClass = 'text-gray-700';
-      }
-      const isCurrent = index === inputChars.length;
-      let cursorClass = '';
+    // WORD-BASED RENDERING (Fixes Cascade Errors)
+    const originalWords = currentText.split(' ');
+    const typedWords = inputText.split(' ');
 
+    return originalWords.map((word, wIndex) => {
+      const isCurrentWord = wIndex === typedWords.length - 1;
+      const isPastWord = wIndex < typedWords.length - 1;
+      const typedWord = typedWords[wIndex] || '';
 
-      // If Highlight is OFF, we override colors to be Simple Black/None
-      if (!settings.highlight) {
-        bgClass = 'bg-transparent';
-        colorClass = 'text-black'; // Default all text to black
-
-        // Ensure even past characters are black
-        if (index < inputChars.length) {
-          colorClass = 'text-black';
-        }
-
-        // NO CURSOR in Original Text as per user request
-      } else {
-        // Highlight ON: Standard Logic reuse
-        if (isCurrent) {
-          if (isTcs) {
-            bgClass = 'bg-yellow-400';
-            colorClass = 'text-black font-bold';
-          }
-          // NO CURSOR in Original Text
-        } else {
-          // Future text color
-          if (!inputChars[index]) {
-            colorClass = 'text-gray-900';
-          }
-        }
-      }
+      // Container for word to ensure wrapping works nicely
+      // We add a trailing space for all except last, or handle space separately
 
       return (
-        <span key={index} className={`relative ${colorClass} ${bgClass}`}>
-          {char === ' ' && isError && settings.highlight ? '_' : char}
+        <span key={wIndex} className={`inline-block whitespace-nowrap ${isCurrentWord && settings.highlight && isTcs ? 'bg-yellow-400 rounded-sm px-0.5' : ''}`}>
+          {word.split('').map((char, cIndex) => {
+            let colorClass = 'text-gray-900';
+            let bgClass = '';
+
+            if (!settings.highlight) {
+              colorClass = 'text-black';
+            } else {
+              if (isPastWord) {
+                // Past Word Logic
+                const typedChar = typedWord[cIndex];
+                if (typedChar === char) {
+                  colorClass = 'text-green-600 font-medium';
+                } else {
+                  // Error or Missing char
+                  colorClass = 'text-red-600 font-bold';
+                  // If typedChar doesn't exist (word too short), logic below handles it? 
+                  // No, map is on original char. So typedChar is undefined.
+                }
+              } else if (isCurrentWord) {
+                // Current Word Logic
+                const typedChar = typedWord[cIndex];
+                if (typedChar !== undefined) {
+                  if (typedChar === char) {
+                    colorClass = 'text-green-600 font-medium';
+                  } else {
+                    colorClass = 'text-red-600 font-bold bg-red-100';
+                  }
+                } else {
+                  // Not typed yet
+                  colorClass = 'text-black';
+                }
+              } else {
+                // Future Word
+                colorClass = 'text-gray-900';
+              }
+            }
+
+            return (
+              <span key={cIndex} className={`${colorClass} ${bgClass}`}>
+                {char}
+              </span>
+            )
+          })}
+          {/* Handle Space Rendering */}
+          {wIndex < originalWords.length - 1 && (
+            <span className="inline-block w-2"> </span>
+          )}
         </span>
       );
     });
@@ -700,9 +693,9 @@ const TypingTest: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <MetricCard label="Net Speed (WPM)" value={testResult.netWpm} icon={<Gauge size={24} />} highlight={true} subIcon={<Zap size={16} className="text-yellow-400" />} />
-            <MetricCard label="Accuracy (%)" value={testResult.accuracy === "100" ? "100" : (100 - parseFloat(testResult.accuracy)).toFixed(2)} icon={<Percent size={24} />} highlight={true} />
+            <MetricCard label="Accuracy (%)" value={testResult.accuracy} icon={<Percent size={24} />} highlight={true} />
             <MetricCard label="Gross Speed (WPM)" value={testResult.grossWpm} icon={<Activity size={24} />} />
-            <MetricCard label="Error Rate %" value={testResult.accuracy} icon={<AlertTriangle size={24} />} />
+            <MetricCard label="Error Rate %" value={testResult.accuracy === "100" ? "0" : (100 - parseFloat(testResult.accuracy)).toFixed(2)} icon={<AlertTriangle size={24} />} />
 
             <MetricCard label="Keystrokes" value={testResult.keystrokes} icon={<Keyboard size={24} />} />
             <MetricCard label="Full Mistakes" value={testResult.fullMistakes} icon={<XCircle size={24} />} />
