@@ -513,10 +513,21 @@ const TypingTest: React.FC = () => {
       let cursorClass = '';
       if (isCurrent) {
         if (isTcs) {
-          bgClass = 'bg-yellow-400';
-          colorClass = 'text-black font-bold';
+          if (settings.highlight) {
+            bgClass = 'bg-yellow-400';
+            colorClass = 'text-black font-bold';
+          } else {
+            // No highlight, just cursor or minimal
+            bgClass = 'bg-transparent';
+            colorClass = 'text-black font-bold border-l-2 border-black animate-pulse -ml-[1px] pl-[1px]';
+          }
         } else {
           cursorClass = 'border-l-2 border-brand-purple animate-pulse';
+        }
+      } else {
+        // Future text color - make it darker for TCS
+        if (!inputChars[index]) {
+          colorClass = 'text-gray-900'; // Darker than gray-700
         }
       }
       return (
@@ -1020,6 +1031,24 @@ const TypingTest: React.FC = () => {
                   </button>
                 </div>
                 <div className="flex items-center justify-between">
+                  <label className="font-medium">Auto Scroll</label>
+                  <button
+                    onClick={() => setSettings(s => ({ ...s, autoScroll: !s.autoScroll }))}
+                    className={`w-10 h-5 rounded-full relative transition-colors ${settings.autoScroll ? 'bg-blue-600' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-all ${settings.autoScroll ? 'translate-x-5' : ''}`}></div>
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="font-medium">Backspace</label>
+                  <button
+                    onClick={() => setSettings(s => ({ ...s, backspace: s.backspace === 'off' ? 'on' : 'off' }))}
+                    className={`w-10 h-5 rounded-full relative transition-colors ${settings.backspace !== 'off' ? 'bg-blue-600' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-all ${settings.backspace !== 'off' ? 'translate-x-5' : ''}`}></div>
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
                   <label className="font-medium">Sound</label>
                   <button
                     onClick={() => setSettings(s => ({ ...s, sound: !s.sound }))}
@@ -1034,7 +1063,7 @@ const TypingTest: React.FC = () => {
         )}
 
         {showResult && renderDashboard()}
-      </div>
+      </div >
     );
   };
 
