@@ -1017,57 +1017,48 @@ const TypingTest: React.FC = () => {
         {/* Modals */}
         {showSettings && (
           <>
-            <div className="fixed inset-0 bg-black/50 z-[60]" onClick={() => setShowSettings(false)}></div>
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-2xl z-[70] w-96 p-6 animate-in zoom-in-95">
-              <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 className="font-bold text-lg">Exam Settings</h3>
-                <button onClick={() => setShowSettings(false)}><X size={20} /></button>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" onClick={() => setShowSettings(false)}></div>
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#0a0a0f] border border-brand-purple/50 rounded-2xl shadow-[0_0_50px_rgba(168,85,247,0.2)] z-[70] w-96 p-6 animate-in zoom-in-95 ring-1 ring-white/10">
+              <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                <h3 className="font-display font-bold text-xl text-white flex items-center gap-2">
+                  <Settings className="text-brand-purple" size={20} />
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Exam Settings</span>
+                </h3>
+                <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-full"><X size={20} /></button>
               </div>
-              {/* Settings Content reused from before, simplified */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <label className="font-medium">Font Size</label>
-                  <div className="flex border rounded">
-                    <button onClick={() => setSettings(s => ({ ...s, fontSize: Math.max(14, s.fontSize - 2) }))} className="px-3 py-1 bg-gray-100 hover:bg-gray-200">-</button>
-                    <span className="px-3 py-1 font-bold">{settings.fontSize}</span>
-                    <button onClick={() => setSettings(s => ({ ...s, fontSize: Math.min(32, s.fontSize + 2) }))} className="px-3 py-1 bg-gray-100 hover:bg-gray-200">+</button>
+
+              <div className="space-y-5">
+                {/* Font Size */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-900/50 border border-gray-800/50">
+                  <label className="font-bold text-gray-300 text-sm">Font Size</label>
+                  <div className="flex items-center gap-1 bg-black/40 rounded-lg p-1 border border-gray-700">
+                    <button onClick={() => setSettings(s => ({ ...s, fontSize: Math.max(14, s.fontSize - 2) }))} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-brand-purple/20 rounded-md transition-all font-bold">-</button>
+                    <span className="w-8 text-center font-mono font-bold text-brand-purple">{settings.fontSize}</span>
+                    <button onClick={() => setSettings(s => ({ ...s, fontSize: Math.min(32, s.fontSize + 2) }))} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-brand-purple/20 rounded-md transition-all font-bold">+</button>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <label className="font-medium">Highlight Text</label>
-                  <button
-                    onClick={() => setSettings(s => ({ ...s, highlight: !s.highlight }))}
-                    className={`w-10 h-5 rounded-full relative transition-colors ${settings.highlight ? 'bg-blue-600' : 'bg-gray-300'}`}
-                  >
-                    <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-all ${settings.highlight ? 'translate-x-5' : ''}`}></div>
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="font-medium">Auto Scroll</label>
-                  <button
-                    onClick={() => setSettings(s => ({ ...s, autoScroll: !s.autoScroll }))}
-                    className={`w-10 h-5 rounded-full relative transition-colors ${settings.autoScroll ? 'bg-blue-600' : 'bg-gray-300'}`}
-                  >
-                    <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-all ${settings.autoScroll ? 'translate-x-5' : ''}`}></div>
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="font-medium">Backspace</label>
-                  <button
-                    onClick={() => setSettings(s => ({ ...s, backspace: s.backspace === 'off' ? 'on' : 'off' }))}
-                    className={`w-10 h-5 rounded-full relative transition-colors ${settings.backspace !== 'off' ? 'bg-blue-600' : 'bg-gray-300'}`}
-                  >
-                    <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-all ${settings.backspace !== 'off' ? 'translate-x-5' : ''}`}></div>
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="font-medium">Sound</label>
-                  <button
-                    onClick={() => setSettings(s => ({ ...s, sound: !s.sound }))}
-                    className={`w-10 h-5 rounded-full relative transition-colors ${settings.sound ? 'bg-blue-600' : 'bg-gray-300'}`}
-                  >
-                    <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-all ${settings.sound ? 'translate-x-5' : ''}`}></div>
-                  </button>
+
+                {/* Toggles */}
+                <div className="space-y-3">
+                  {[
+                    { label: 'Highlight Text', key: 'highlight' as const, value: settings.highlight },
+                    { label: 'Auto Scroll', key: 'autoScroll' as const, value: settings.autoScroll },
+                    { label: 'Backspace', key: 'backspace' as const, value: settings.backspace !== 'off', action: () => setSettings(s => ({ ...s, backspace: s.backspace === 'off' ? 'on' : 'off' })) },
+                    { label: 'Sound', key: 'sound' as const, value: settings.sound }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-900/30 transition-colors border border-transparent hover:border-gray-800/50">
+                      <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
+                        {item.label}
+                        {item.value && <span className="w-1.5 h-1.5 rounded-full bg-brand-purple shadow-[0_0_8px_rgba(168,85,247,0.8)]"></span>}
+                      </label>
+                      <button
+                        onClick={() => item.action ? item.action() : setSettings(s => ({ ...s, [item.key]: !s[item.key] }))}
+                        className={`w-11 h-6 rounded-full relative transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-brand-purple/50 ${item.value ? 'bg-brand-purple shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'bg-gray-800 border border-gray-700'}`}
+                      >
+                        <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-sm ${item.value ? 'translate-x-5' : ''}`}></div>
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
