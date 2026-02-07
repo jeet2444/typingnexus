@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const isAdminBuild = mode === 'admin';
 
   return {
-    base: isAdminBuild ? './' : '/',
+    base: './', // Use relative paths for universal compatibility
     server: {
       port: 3000,
       host: '0.0.0.0',
