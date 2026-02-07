@@ -137,102 +137,116 @@ const ExamModeSelector: React.FC<ExamModeSelectorProps> = ({ onSelectExam, curre
     }, [displayingExams, searchQuery, selectedType]);
 
     return (
-        <div className="space-y-6 max-w-[1400px] mx-auto px-4 pb-12">
+        <div className="space-y-8 max-w-[1400px] mx-auto px-4 pb-12 animate-in fade-in duration-500">
             {/* Page Header */}
-            <div className="mb-12">
-                <h1 className="text-4xl font-bold text-gray-900 mb-8">Select Exams for Typing</h1>
-                <div className="h-px w-full bg-gray-200"></div>
+            <div className="mb-8">
+                <h1 className="text-4xl font-display font-bold text-white mb-4 tracking-tight">
+                    Select <span className="text-brand-purple">Exams</span> for Typing
+                </h1>
+                <div className="h-px w-full bg-gradient-to-r from-brand-purple via-gray-800 to-transparent"></div>
             </div>
 
             {/* Search and Filters Header */}
             <div className="flex flex-col md:flex-row gap-4 items-center mb-8">
-                <div className="relative flex-grow w-full">
-                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
+                <div className="relative flex-grow w-full group">
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-500 group-focus-within:text-brand-purple transition-colors">
                         <Search size={18} />
                     </div>
                     <input
                         type="text"
-                        placeholder="Search..."
-                        className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition-all text-sm shadow-sm"
+                        placeholder="Search for exam patterns..."
+                        className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-800 text-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-purple/20 focus:border-brand-purple transition-all text-sm placeholder-gray-600 backdrop-blur-sm"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
 
                 <div className="flex gap-3 w-full md:w-auto">
-                    <button className="flex items-center justify-between px-6 py-3 bg-brand-black text-white rounded-lg text-sm font-bold min-w-[140px]">
+                    <button className="flex items-center justify-between px-6 py-3 bg-gray-900/50 border border-gray-800 text-gray-300 hover:text-white hover:border-brand-purple/50 rounded-xl text-sm font-bold min-w-[140px] transition-all group backdrop-blur-sm">
                         <span>Exam Type</span>
-                        <ChevronDown size={14} className="ml-2" />
+                        <ChevronDown size={14} className="ml-2 text-gray-500 group-hover:text-brand-purple transition-colors" />
                     </button>
 
-                    <button className="flex items-center justify-between px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-bold min-w-[180px] shadow-sm">
+                    <button className="flex items-center justify-between px-6 py-3 bg-gray-900/50 border border-gray-800 text-gray-300 hover:text-white hover:border-brand-purple/50 rounded-xl text-sm font-bold min-w-[180px] transition-all group backdrop-blur-sm">
                         <span>Order by: Relevance</span>
-                        <ChevronDown size={14} className="ml-2" />
+                        <ChevronDown size={14} className="ml-2 text-gray-500 group-hover:text-brand-purple transition-colors" />
                     </button>
                 </div>
             </div>
 
             {/* Popular Keywords Tags */}
             <div className="flex flex-wrap gap-2 items-center mb-10">
-                <span className="text-xs font-bold text-gray-400 flex items-center gap-1.5 mr-2">
-                    <Search size={14} className="text-blue-500" /> Popular Search Keywords
+                <span className="text-xs font-bold text-gray-500 flex items-center gap-1.5 mr-2 uppercase tracking-wide">
+                    <Search size={12} className="text-brand-purple" /> Popular:
                 </span>
                 {keywords.map(kw => (
                     <button
                         key={kw}
                         onClick={() => setSearchQuery(kw)}
-                        className={`px-3 py-1.5 rounded-md border text-[11px] font-bold transition-all ${searchQuery === kw
-                            ? 'bg-blue-50 border-blue-500 text-blue-600'
-                            : 'bg-white border-gray-200 text-gray-600 hover:border-blue-500 hover:text-blue-500 shadow-sm'
+                        className={`px-3 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${searchQuery === kw
+                            ? 'bg-brand-purple/20 border-brand-purple text-brand-purple shadow-[0_0_10px_rgba(168,85,247,0.2)]'
+                            : 'bg-gray-900/50 border-gray-800 text-gray-400 hover:border-brand-purple/50 hover:text-gray-200 hover:bg-gray-800'
                             }`}
                     >
                         {kw}
                     </button>
                 ))}
-                <button className="px-3 py-1.5 rounded-md bg-amber-100 text-amber-700 text-[11px] font-bold hover:bg-amber-200 transition-all">
+                <button className="px-3 py-1.5 rounded-lg bg-brand-purple/10 text-brand-purple border border-brand-purple/20 text-[11px] font-bold hover:bg-brand-purple/20 transition-all">
                     View All
                 </button>
             </div>
 
             {/* Exam Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {filteredExams.map(exam => (
                     <div
                         key={exam.id}
-                        className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden flex flex-col cursor-pointer"
+                        className="bg-gray-900/40 backdrop-blur-sm rounded-2xl border border-gray-800/60 hover:border-brand-purple shadow-lg hover:shadow-[0_0_30px_rgba(168,85,247,0.15)] transition-all duration-300 group overflow-hidden flex flex-col cursor-pointer relative"
                         onClick={() => onSelectExam(exam)}
                     >
-                        <div className="p-8 flex-grow relative bg-[#fafafa]">
+                        {/* Cyberpunk accent line */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-purple/0 to-transparent group-hover:via-brand-purple/80 transition-all duration-500"></div>
+
+                        <div className="p-6 flex-grow relative">
                             {/* Dotted background pattern simulation */}
-                            <div className="absolute top-0 right-0 w-32 h-32 opacity-[0.05] pointer-events-none">
+                            <div className="absolute top-0 right-0 w-32 h-32 opacity-[0.1] pointer-events-none mix-blend-overlay">
                                 <svg width="100%" height="100%">
                                     <pattern id={`dots-${exam.id}`} x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
-                                        <circle cx="2" cy="2" r="1.5" fill="#4b5563" />
+                                        <circle cx="2" cy="2" r="1.5" fill="#a855f7" />
                                     </pattern>
                                     <rect width="100%" height="100%" fill={`url(#dots-${exam.id})`} />
                                 </svg>
                             </div>
 
-                            <div className="text-[10px] font-bold text-gray-400 mb-6 tracking-widest uppercase">
-                                CREATED- JAN 15, 2026
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase bg-gray-900/80 px-2 py-1 rounded border border-gray-800 group-hover:border-brand-purple/30 transition-colors">
+                                    {exam.category}
+                                </div>
+                                {exam.highlightingEnabled && (
+                                    <div className="text-[10px] font-bold text-brand-purple flex items-center gap-1">
+                                        <Star size={10} fill="currentColor" /> Premium
+                                    </div>
+                                )}
                             </div>
 
-                            <h3 className="font-bold text-lg text-gray-900 mb-8 line-clamp-2 min-h-[56px] group-hover:text-brand-purple transition-colors leading-tight">
+                            <h3 className="font-display font-bold text-lg text-gray-100 mb-6 line-clamp-2 min-h-[56px] group-hover:text-brand-purple transition-colors leading-tight">
                                 {exam.name}
                             </h3>
 
-                            <div className="flex items-end justify-between border-t border-gray-200/50 pt-6">
-                                <div className="space-y-2">
-                                    <div className="text-[12px] font-bold text-gray-700">
+                            <div className="flex items-end justify-between border-t border-gray-800 pt-4 mt-auto">
+                                <div className="space-y-1.5">
+                                    <div className="text-xs font-bold text-gray-400 flex items-center gap-1.5">
+                                        <Keyboard size={12} className="text-gray-500" />
                                         {exam.targetKeyDepressions || 2000} words
                                     </div>
-                                    <div className="text-[12px] font-bold text-gray-700">
+                                    <div className="text-xs font-bold text-gray-400 flex items-center gap-1.5">
+                                        <Clock size={12} className="text-gray-500" />
                                         {Math.floor(exam.duration / 60)}:00 min.
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-1.5 px-2 py-1 bg-black text-white rounded text-[11px] font-bold">
-                                    <User size={12} fill="white" />
+                                <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-950 border border-gray-800 text-gray-300 rounded text-[10px] font-bold group-hover:border-brand-purple/30 transition-colors">
+                                    <User size={10} className="text-brand-purple" />
                                     <span>
                                         {(() => {
                                             // Stable random seed from ID
@@ -260,10 +274,12 @@ const ExamModeSelector: React.FC<ExamModeSelectorProps> = ({ onSelectExam, curre
             </div>
 
             {filteredExams.length === 0 && (
-                <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                    <Search size={40} className="mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-lg font-bold text-gray-900">No exams found</h3>
-                    <p className="text-gray-500 text-sm">Try changing your search keywords or filters</p>
+                <div className="text-center py-20 bg-gray-900/20 rounded-2xl border-2 border-dashed border-gray-800 backdrop-blur-sm">
+                    <div className="bg-gray-900 p-4 rounded-full w-fit mx-auto mb-4 border border-gray-800">
+                        <Search size={32} className="text-gray-600" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-200">No exams found</h3>
+                    <p className="text-gray-500 text-sm mt-1">Try changing your search keywords or filters</p>
                 </div>
             )}
         </div>
