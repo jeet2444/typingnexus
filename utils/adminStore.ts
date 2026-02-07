@@ -737,7 +737,28 @@ export const updateUserProfile = (id: string, updates: Partial<AdminUser>): Admi
     if (userIndex === -1) return null;
     store.users[userIndex] = { ...store.users[userIndex], ...updates };
     saveAdminStore(store);
+    saveAdminStore(store);
     return store.users[userIndex];
+};
+
+// --- NEW: Fetch All App Users (from Supabase) ---
+export const fetchAppUsers = async (): Promise<AdminUser[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .order('joined', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching app users:", error);
+            return [];
+        }
+
+        return data as AdminUser[];
+    } catch (e) {
+        console.error("Exception fetching app users:", e);
+        return [];
+    }
 };
 
 // Check if user has access to premium content

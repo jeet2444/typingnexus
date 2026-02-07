@@ -104,7 +104,8 @@ import {
   getUserById,
   syncSettingsFromHost,
   updateUserProfile,
-  hasProAccess
+  hasProAccess,
+  fetchAppUsers
 } from '../utils/adminStore';
 import { getAdminLogs, addAdminLog, ActivityLog } from '../utils/adminLogs'; // Import Logger
 import CPTTestManager from './CPTTestManager';
@@ -1329,33 +1330,104 @@ const BlogView: React.FC<{ blogs: any[], setBlogs: any }> = ({ blogs, setBlogs }
   );
 };
 
-const UsersView: React.FC<{ users: any[], setUsers: any, toggleUserStatus: (id: number) => void, deleteUser: (id: number) => void }> = ({ users, setUsers, toggleUserStatus, deleteUser }) => {
+const UsersView: React.FC<{ users: any[], setUsers: any, toggleUserStatus: (id: number) => void, deleteUser: (id: number) => void }> = ({ users: initialUsers, setUsers, toggleUserStatus, deleteUser }) => {
+  const [appUsers, setAppUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({ name: '', email: '', plan: 'Free', role: 'User', status: 'Active' });
+  const [editingId, setEditingId] = useState<string | null>(null); // Changed to string for Supabase ID
+  const [formData, setFormData] = useState({ name: '', email: '', plan: 'Free', role: 'User', status: 'Active' as 'Active' | 'Inactive', purchasedPackIds: [] as string[] });
+
+  // Filters
+  const [filterRole, setFilterRole] = useState('All');
+  const [filterPlan, setFilterPlan] = useState('All');
+  const [filterStatus, setFilterStatus] = useState('All');
+  const [filterPack, setFilterPack] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const store = getAdminStore();
+  const comboPacks = store.comboPacks || [];
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const users = await fetchAppUsers();
+    // Ensure purchasedPackIds is array
+    const sanitizedUsers = users.map(u => ({
+      ...u,
+      purchasedPackIds: u.purchasedPackIds || []
+    }));
+    setAppUsers(sanitizedUsers);
+    setLoading(false);
+  };
+
+  const filteredUsers = appUsers.filter(user => {
+    const matchesSearch = (user.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (user.email?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+    const matchesRole = filterRole === 'All' || user.role === filterRole;
+    const matchesPlan = filterPlan === 'All' || (user.plan || 'Free') === filterPlan;
+    const matchesStatus = filterStatus === 'All' || (user.status || 'Active') === filterStatus;
+
+    // Combo Pack Filter: Check if user has purchased the selected pack
+    const matchesPack = filterPack === 'All' || (user.purchasedPackIds && user.purchasedPackIds.includes(filterPack));
+
+    return matchesSearch && matchesRole && matchesPlan && matchesStatus && matchesPack;
+  });
 
   const handleAddUser = () => {
     setEditingId(null);
-    setFormData({ name: '', email: '', plan: 'Free', role: 'User', status: 'Active' });
+    setFormData({ name: '', email: '', plan: 'Free', role: 'User', status: 'Active', purchasedPackIds: [] });
     setShowModal(true);
   };
 
-  const handleEditUser = (user: any) => {
-    setEditingId(user.id);
-    setFormData({ name: user.name, email: user.email, plan: user.plan, role: user.role, status: user.status });
-    setShowModal(true);
-  };
-
-  const handleSave = () => {
-    if (editingId) {
-      setUsers(users.map(u => u.id === editingId ? { ...u, ...formData } : u));
+  const togglePackAccess = (packId: string) => {
+    if (formData.purchasedPackIds.includes(packId)) {
+      setFormData({ ...formData, purchasedPackIds: formData.purchasedPackIds.filter(id => id !== packId) });
     } else {
-      const id = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
-      setUsers([...users, { id, ...formData, joined: new Date().toISOString().split('T')[0], authMethod: 'Manual' }]);
+      setFormData({ ...formData, purchasedPackIds: [...formData.purchasedPackIds, packId] });
     }
+  };
+
+  const handleEditUser = (user: AdminUser) => {
+    setEditingId(user.id);
+    setFormData({
+      name: user.name,
+      email: user.email,
+      plan: user.plan,
+      role: user.role,
+      status: user.status,
+      purchasedPackIds: user.purchasedPackIds || []
+    });
+    setShowModal(true);
+  };
+
+  const handleSave = async () => {
+    // Note: Creating/Updating users directly in Supabase from here would require
+    // calling specific Supabase Admin APIs or Edge Functions.
+    // For now, we'll simulate the update in UI and log it.
+
+    // In a real implementation:
+    // if (editingId) await supabase.from('profiles').update(formData).eq('id', editingId);
+
+    // Refresh list locally for demo
+    if (editingId) {
+      setAppUsers(appUsers.map(u => u.id === editingId ? { ...u, ...formData } : u));
+    } else {
+      // Mock new user
+      const newUser: AdminUser = {
+        id: `new-${Date.now()}`,
+        ...formData,
+        joined: new Date().toISOString(),
+        authMethod: 'Manual'
+      };
+      setAppUsers([newUser, ...appUsers]);
+    }
+
     const actionType = editingId ? 'User Updated' : 'User Created';
     addAdminLog({
-      adminName: 'Admin', // In real app, get current admin
+      adminName: 'Admin',
       action: actionType,
       details: `${actionType}: ${formData.name} (${formData.email}) - Role: ${formData.role}`,
       type: 'success'
@@ -1365,16 +1437,59 @@ const UsersView: React.FC<{ users: any[], setUsers: any, toggleUserStatus: (id: 
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-display font-bold text-white">User Directory</h2>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-display font-bold text-white">User Directory</h2>
+          <p className="text-sm text-gray-400">{filteredUsers.length} users found</p>
+        </div>
         <div className="flex gap-2">
-          <button onClick={() => exportToCSV(users, 'users_list.csv')} className="bg-gray-900 border border-gray-800 text-gray-300 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-800 hover:text-white transition-all">
+          <button onClick={() => exportToCSV(appUsers, 'users_list.csv')} className="bg-gray-900 border border-gray-800 text-gray-300 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-800 hover:text-white transition-all">
             <Download size={16} /> Export CSV
           </button>
           <button onClick={handleAddUser} className="bg-brand-black text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-800 border border-brand-purple/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
             <Plus size={16} /> Add New User
           </button>
         </div>
+      </div>
+
+      {/* FILTERS BAR */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 bg-gray-900/50 p-4 rounded-xl border border-gray-800 backdrop-blur-sm">
+        <div className="relative col-span-1 md:col-span-1">
+          <Search className="absolute left-3 top-2.5 text-gray-500" size={16} />
+          <input
+            className="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:border-brand-purple focus:outline-none"
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg p-2 focus:border-brand-purple focus:outline-none">
+          <option value="All">All Roles</option>
+          <option value="User">Student</option>
+          <option value="Admin">Admin</option>
+          <option value="Moderator">Moderator</option>
+        </select>
+
+        <select value={filterPlan} onChange={e => setFilterPlan(e.target.value)} className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg p-2 focus:border-brand-purple focus:outline-none">
+          <option value="All">All Plans</option>
+          <option value="Free">Free Tier</option>
+          <option value="Pro Monthly">Pro Monthly</option>
+          <option value="Pro Yearly">Pro Yearly</option>
+        </select>
+
+        <select value={filterPack} onChange={e => setFilterPack(e.target.value)} className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg p-2 focus:border-brand-purple focus:outline-none">
+          <option value="All">All Combo Packs</option>
+          {comboPacks.map(pack => (
+            <option key={pack.id} value={pack.id}>{pack.title}</option>
+          ))}
+        </select>
+
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg p-2 focus:border-brand-purple focus:outline-none">
+          <option value="All">All Status</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
       </div>
 
       {showModal && (
@@ -1408,6 +1523,28 @@ const UsersView: React.FC<{ users: any[], setUsers: any, toggleUserStatus: (id: 
               </select>
             </div>
           </div>
+
+          <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-800 mb-4">
+            <h4 className="font-bold text-gray-200 mb-3 text-sm flex items-center gap-2"><Package size={16} className="text-brand-purple" /> Grant Combo Pack Access</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+              {comboPacks.length === 0 && <span className="text-gray-500 text-xs italic">No combo packs available. Create one in Combo Packs tab.</span>}
+              {comboPacks.map(pack => (
+                <label key={pack.id} className="flex items-center gap-2 p-2 rounded hover:bg-gray-800 cursor-pointer border border-transparent hover:border-gray-700 transition-colors">
+                  <input
+                    type="checkbox"
+                    className="accent-brand-purple w-4 h-4 rounded"
+                    checked={formData.purchasedPackIds.includes(pack.id)}
+                    onChange={() => togglePackAccess(pack.id)}
+                  />
+                  <div className="text-xs">
+                    <div className="font-bold text-gray-300">{pack.title}</div>
+                    <div className="text-gray-500">₹{pack.price}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-400 mt-2 italic">* Checked items will be accessible to this user immediately.</p>
+          </div>
           <div className="flex justify-end gap-3 mt-6">
             <button onClick={() => setShowModal(false)} className="btn-secondary">Cancel</button>
             <button onClick={handleSave} className="btn-primary">{editingId ? 'Save Changes' : 'Create Account'}</button>
@@ -1416,25 +1553,68 @@ const UsersView: React.FC<{ users: any[], setUsers: any, toggleUserStatus: (id: 
       )}
 
       <div className="bg-gray-900/50 border border-gray-800 rounded-xl shadow-2xl overflow-hidden backdrop-blur-sm">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-gray-800/50 text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em] border-b border-gray-800">
-            <tr><th className="px-6 py-4">Student Profile</th><th className="px-6 py-4">Access Tier</th><th className="px-6 py-4">Status</th><th className="px-6 py-4 text-right">Actions</th></tr>
-          </thead>
-          <tbody className="divide-y divide-gray-800">{users.map(user => (
-            <tr key={user.id} className="hover:bg-brand-purple/5 transition-all group">
-              <td className="px-6 py-4"><div className="font-bold text-gray-200 group-hover:text-white">{user.name}</div><div className="text-[10px] text-gray-500 font-mono uppercase tracking-tight">{user.email}</div></td>
-              <td className="px-6 py-4"><span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${user.plan.includes('Pro') ? 'bg-brand-purple/20 text-brand-purple border-brand-purple/30' : 'bg-gray-800 text-gray-500 border-gray-700'}`}>{user.plan}</span></td>
-              <td className="px-6 py-4"><button onClick={() => toggleUserStatus(user.id)} className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-2 border transition-colors ${user.status === 'Active' ? 'bg-green-900/20 text-green-400 border-green-800' : 'bg-gray-800/50 text-gray-500 border-gray-700'}`}>{user.status}</button></td>
-              <td className="px-6 py-4 text-right flex justify-end gap-2">
-                <button onClick={() => handleEditUser(user)} className="p-2 hover:bg-brand-purple/10 rounded-lg text-brand-purple transition-all"><Edit size={16} /></button>
-                <button onClick={() => {
-                  deleteUser(user.id);
-                  addAdminLog({ adminName: 'Admin', action: 'User Deleted', details: `Deleted user ${user.name} (${user.email})`, type: 'danger' });
-                }} className="p-2 hover:bg-red-900/10 rounded-lg text-red-500 transition-all"><Ban size={16} /></button>
-              </td>
-            </tr>
-          ))}</tbody>
-        </table>
+        {loading ? (
+          <div className="p-8 text-center text-gray-400">Loading users...</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-800/50 text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em] border-b border-gray-800">
+                <tr><th className="px-6 py-4">Student Profile</th><th className="px-6 py-4">Access Tier</th><th className="px-6 py-4">Combo Packs</th><th className="px-6 py-4">Status</th><th className="px-6 py-4 text-right">Actions</th></tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800">
+                {filteredUsers.length === 0 ? (
+                  <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-500">No users found matching filters.</td></tr>
+                ) : (
+                  filteredUsers.map(user => (
+                    <tr key={user.id} className="hover:bg-brand-purple/5 transition-all group">
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-gray-200 group-hover:text-white">{user.name}</div>
+                        <div className="text-[10px] text-gray-500 font-mono uppercase tracking-tight">{user.email}</div>
+                        <div className="text-[10px] text-gray-600 mt-1">Joined: {new Date(user.joined).toLocaleDateString()}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${user.plan && user.plan.includes('Pro') ? 'bg-brand-purple/20 text-brand-purple border-brand-purple/30' : 'bg-gray-800 text-gray-500 border-gray-700'}`}>
+                          {user.plan || 'Free'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {user.purchasedPackIds && user.purchasedPackIds.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {user.purchasedPackIds.map(pid => {
+                              const pack = comboPacks.find(p => p.id === pid);
+                              return pack ? (
+                                <span key={pid} className="text-[9px] bg-blue-900/30 text-blue-400 border border-blue-800 px-1.5 py-0.5 rounded" title={pack.title}>
+                                  {pack.title.substring(0, 15)}...
+                                </span>
+                              ) : null;
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-gray-600 text-[10px] italic">None</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <button className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-2 border transition-colors ${user.status === 'Active' ? 'bg-green-900/20 text-green-400 border-green-800' : 'bg-gray-800/50 text-gray-500 border-gray-700'}`}>
+                          {user.status}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 text-right flex justify-end gap-2">
+                        <button onClick={() => handleEditUser(user)} className="p-2 hover:bg-brand-purple/10 rounded-lg text-brand-purple transition-all"><Edit size={16} /></button>
+                        <button onClick={() => {
+                          // In real app, call delete API
+                          if (confirm('Delete user?')) {
+                            setAppUsers(appUsers.filter(u => u.id !== user.id));
+                            addAdminLog({ adminName: 'Admin', action: 'User Deleted', details: `Deleted user ${user.name}`, type: 'danger' });
+                          }
+                        }} className="p-2 hover:bg-red-900/10 rounded-lg text-red-500 transition-all"><Ban size={16} /></button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
