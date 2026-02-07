@@ -952,7 +952,9 @@ const TypingTest: React.FC = () => {
             </div>
             <div className="bg-white/20 px-3 py-1 rounded flex flex-col items-center min-w-[80px]">
               <div className="text-xs text-blue-100">Time Left</div>
-              <div className="font-bold font-mono text-xl leading-none">{formatTimeMinutes(timeLeft).split(' ')[0]}</div>
+              <div className="font-bold font-mono text-xl leading-none">
+                {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+              </div>
             </div>
             <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-white/10 rounded transition-colors">
               <Settings size={20} />
