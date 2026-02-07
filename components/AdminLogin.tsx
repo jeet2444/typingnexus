@@ -1,0 +1,148 @@
+import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { LogIn, ShieldAlert, Lock, Mail, ArrowRight, User } from 'lucide-react';
+
+const AdminLogin: React.FC = () => {
+    const { login, signup, isAdmin } = useAuth();
+    const [email, setEmail] = useState('Mahijeet');
+    const [password, setPassword] = useState('Ramjiram@555999');
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
+
+        // Auto-handle 'Mahijeet' username
+        let loginEmail = email;
+        const isMahijeet = email.toLowerCase() === 'mahijeet';
+        if (isMahijeet) {
+            loginEmail = 'mahijeet@typingnexus.in';
+        }
+
+        try {
+            // 1. Attempt Login first
+            const result = await login(loginEmail, password);
+
+            if (result.success) {
+                // Login successful - AuthContext state update will trigger re-render
+                return;
+            }
+
+            if (!result.success) {
+                const msg = result.error || 'Invalid credentials';
+                setError(msg);
+                setLoading(false);
+            }
+            setLoading(false);
+
+        } catch (err: any) {
+            alert("Login Exception: " + (err.message || String(err)));
+            setError('An unexpected error occurred. Please try again.');
+            setLoading(false);
+        }
+    };
+
+    const { currentUser } = useAuth();
+    React.useEffect(() => {
+        if (currentUser && !isAdmin && loading) {
+            const timer = setTimeout(() => {
+                if (loading) {
+                    setError('Login successful, but you do not have Admin permissions.');
+                    setLoading(false);
+                }
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [currentUser, isAdmin, loading]);
+
+    return (
+        <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center font-sans relative overflow-hidden">
+            {/* Ambient Effects */}
+            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-brand-purple/20 blur-[120px] rounded-full pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none translate-x-1/2 translate-y-1/2"></div>
+
+            <div className="mb-8 relative z-10 flex flex-col items-center">
+                <div className="w-16 h-16 bg-gray-900 border border-gray-800 text-white rounded-2xl flex items-center justify-center font-bold text-3xl shadow-[0_0_30px_rgba(168,85,247,0.3)] mb-4">
+                    TN
+                </div>
+                <h1 className="font-display font-bold text-3xl tracking-tight text-white">
+                    Admin<span className="text-brand-purple">Portal</span>
+                </h1>
+                <p className="text-gray-500 text-sm mt-1">Restricted Access • Authorized Personnel Only</p>
+            </div>
+
+            <div className="w-full max-w-[400px] bg-gray-900/60 backdrop-blur-xl p-8 border border-gray-800 rounded-2xl shadow-2xl relative z-10">
+                {error && (
+                    <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-sm text-red-200 flex items-start gap-3">
+                        <ShieldAlert size={18} className="text-red-500 shrink-0 mt-0.5" />
+                        <span>{error}</span>
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Identity</label>
+                        <div className="relative group">
+                            <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-brand-purple transition-colors" />
+                            <input
+                                type="text"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-600 outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition-all text-sm font-medium"
+                                placeholder="Username or Email"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Security Key</label>
+                        <div className="relative group">
+                            <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-brand-purple transition-colors" />
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-600 outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple transition-all text-sm font-medium"
+                                placeholder="Password"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                            <input type="checkbox" className="w-4 h-4 border-gray-700 rounded bg-gray-800 text-brand-purple focus:ring-offset-gray-900" />
+                            <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors font-medium">Remember Session</span>
+                        </label>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-gradient-to-r from-brand-purple to-purple-600 hover:from-purple-500 hover:to-purple-500 text-white py-3 rounded-lg text-sm font-bold shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {loading ? 'Authenticating...' : (
+                            <>
+                                Access System <ArrowRight size={16} />
+                            </>
+                        )}
+                    </button>
+                </form>
+            </div>
+
+            <div className="mt-8 flex flex-col items-center gap-4 relative z-10">
+                <a href="/" className="text-xs font-bold text-gray-500 hover:text-brand-purple transition-colors flex items-center gap-2 px-4 py-2 rounded-full border border-transparent hover:border-gray-800 hover:bg-gray-900">
+                    <ArrowRight size={12} className="rotate-180" /> Return to Website
+                </a>
+                <p className="text-[10px] text-gray-600 font-mono">
+                    SECURED CONNECTION • v2.4.0
+                </p>
+            </div>
+        </div>
+    );
+};
+
+export default AdminLogin;

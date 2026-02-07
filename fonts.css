@@ -1,0 +1,35 @@
+/* Custom Fonts Configuration */
+
+/* Hindi - Unicode */
+.font-mangal {
+    font-family: 'Mangal', 'Nirmala UI', 'Latha', sans-serif;
+    letter-spacing: normal;
+}
+
+/* Hindi - Legacy (KrutiDev) */
+@font-face {
+    font-family: 'Kruti Dev 010';
+    src: local('Kruti Dev 010'), local('KrutiDev010');
+}
+.font-krutidev {
+    font-family: 'Kruti Dev 010', sans-serif;
+}
+
+/* Hindi - Legacy (DevLys) */
+@font-face {
+    font-family: 'DevLys 010';
+    src: local('DevLys 010'), local('DevLys010');
+}
+.font-devlys {
+    font-family: 'DevLys 010', sans-serif;
+}
+
+/* Punjabi */
+.font-raavi {
+    font-family: 'Raavi', 'Lohit Punjabi', 'Nirmala UI', sans-serif;
+}
+
+/* Marathi */
+.font-marathi {
+    font-family: 'Mangal', 'Nirmala UI', sans-serif; /* Marathi shares script with Hindi usually */
+}
