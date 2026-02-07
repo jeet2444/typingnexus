@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { kbd, Star, CheckCircle, Zap, Calendar, User, ArrowRight, Monitor, Award, Globe, Shield, Activity, FileSpreadsheet, FileType, Keyboard } from 'lucide-react';
+import { Star, CheckCircle, Zap, Calendar, User, ArrowRight, Monitor, Award, Globe, Shield, Activity, FileSpreadsheet, FileType, Keyboard } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getAdminStore, SiteSettings, BlogPost, ExamResult, Notification } from '../utils/adminStore';
 
@@ -142,6 +142,72 @@ const Home: React.FC = () => {
                </div>
             </div>
          </section>
+
+
+         {/* LIVE EXAMS SECTION - REFINED */}
+         {liveExams.length > 0 && (
+            <section className="py-16 px-4 relative overflow-hidden">
+               {/* Animated Background Mesh */}
+               <div className="absolute inset-0 bg-gray-950">
+                  <div className="absolute inset-0 bg-[linear-gradient(to_right,#4a044e20_1px,transparent_1px),linear-gradient(to_bottom,#4a044e20_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+               </div>
+
+               <div className="max-w-6xl mx-auto relative z-10">
+                  <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-12 text-center">
+                     <div className="relative">
+                        <span className="absolute -inset-1 rounded-full bg-red-600 blur opacity-75 animate-pulse"></span>
+                        <div className="relative px-4 py-1 bg-red-600 rounded-full text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                           <span className="w-2 h-2 bg-white rounded-full animate-ping"></span>
+                           Live Now
+                        </div>
+                     </div>
+                     <h2 className="text-4xl md:text-5xl font-display font-bold text-white drop-shadow-xl">
+                        Active <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500">Fast-Track</span> Exams
+                     </h2>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                     {liveExams.map((exam) => (
+                        <div key={exam.id} className="group relative bg-gray-900/80 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden hover:border-red-500/50 transition-all duration-300 hover:shadow-[0_0_40px_rgba(220,38,38,0.15)] hover:-translate-y-2">
+                           {/* Glow Effect */}
+                           <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                           <div className="p-8 relative z-10 flex flex-col h-full">
+                              <div className="flex justify-between items-start mb-6">
+                                 <span className="bg-red-500/10 text-red-500 border border-red-500/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                                    Official Exam
+                                 </span>
+                                 <Activity className="text-red-500 animate-pulse" size={20} />
+                              </div>
+
+                              <h3 className="text-2xl font-bold text-white mb-3 font-display leading-tight group-hover:text-red-400 transition-colors">
+                                 {exam.title}
+                              </h3>
+
+                              <div className="space-y-3 mb-8 flex-grow">
+                                 <div className="flex items-center gap-3 text-sm text-gray-300">
+                                    <div className="p-1.5 bg-gray-800 rounded-lg text-gray-400 group-hover:text-white transition-colors"><Globe size={14} /></div>
+                                    <span className="font-semibold text-gray-200">{exam.language}</span>
+                                 </div>
+                                 <div className="flex items-center gap-3 text-sm text-gray-300">
+                                    <div className="p-1.5 bg-gray-800 rounded-lg text-gray-400 group-hover:text-white transition-colors"><Calendar size={14} /></div>
+                                    <span className="font-semibold text-white">{exam.liveDate || 'Ends Soon'}</span>
+                                 </div>
+                              </div>
+
+                              <Link to={`/test/${exam.id}`} className="w-full relative group/btn overflow-hidden rounded-xl bg-gradient-to-r from-red-600 to-orange-600 p-[1px]">
+                                 <div className="relative bg-gray-900 group-hover/btn:bg-opacity-0 transition-all duration-300 rounded-xl px-4 py-3.5 flex items-center justify-center gap-2">
+                                    <span className="font-bold text-white group-hover/btn:scale-105 transition-transform">Enter Exam Hall</span>
+                                    <ArrowRight size={18} className="text-white group-hover/btn:translate-x-1 transition-transform" />
+                                 </div>
+                              </Link>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+            </section>
+         )}
 
          {/* Features Grid */}
          <section className="py-20 px-4">

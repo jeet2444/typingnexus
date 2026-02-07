@@ -63,7 +63,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
                     if (accessToken === 'emergency-bypass') {
                         console.log("Emergency Golden Ticket accepted! Granting Super Admin access...");
-                        await fetchProfile('emergency-bypass-id', 'mahijeet@typingnexus.in');
+                        localStorage.setItem('tn_admin_bypass', 'true'); // Persist immediately
+
+                        const superAdminUser = {
+                            id: 'emergency-bypass-id',
+                            email: 'mahijeet@typingnexus.in',
+                            name: 'Mahijeet',
+                            role: 'Super Admin',
+                            plan: 'Premium',
+                            status: 'Active',
+                            joined: new Date().toLocaleDateString()
+                        };
+
+                        setCurrentUser(superAdminUser as any);
+
+                        // Clear URL but keep state
                         window.history.replaceState(null, '', window.location.pathname + window.location.search);
                         setLoading(false);
                         return;

@@ -1,0 +1,39 @@
+{
+    "siteName": "TypingNexus",
+    "siteTagline": "India's #1 Typing & Computer Efficiency Platform",
+    "supportEmail": "support@typingnexus.in",
+    "supportPhone": "+91 91427 93580",
+    "whatsappLabel": "(WhatsApp)",
+    "address": "Rajasthan, India",
+    "maintenanceMode": false,
+    "allowRegistrations": true,
+    "version": 1,
+    "logoUrl": "",
+    "primaryColor": "#2563eb",
+    "footerText": "TypingNexus - Your path to typing excellence. Prepare for RSSB, SSC, and Railway exams.",
+    "copyrightText": "© 2026 TypingNexus.in. All rights reserved.",
+    "showPracticeExams": true,
+    "showTypingTutorial": true,
+    "showKeyboardDrill": true,
+    "showTypingTests": true,
+    "showRSSBPack": true,
+    "showGamification": true,
+    "socialLinks": [
+        {
+            "platform": "Facebook",
+            "url": "https://facebook.com",
+            "visible": true
+        },
+        {
+            "platform": "Instagram",
+            "url": "https://instagram.com",
+            "visible": true
+        },
+        {
+            "platform": "YouTube",
+            "url": "https://youtube.com",
+            "visible": true
+        }
+    ],
+    "featuredItems": []
+}

@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { LogIn, ShieldAlert, Lock, Mail, ArrowRight, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const AdminLogin: React.FC = () => {
-    const { login, signup, isAdmin } = useAuth();
+    const { login, signup, isAdmin, isAuthenticated } = useAuth();
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+
+    // Redirect to dashboard if already logged in as admin
+    useEffect(() => {
+        if (isAuthenticated && isAdmin) {
+            navigate('/dashboard');
+        }
+    }, [isAuthenticated, isAdmin, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,7 +35,9 @@ const AdminLogin: React.FC = () => {
             const result = await login(loginEmail, password);
 
             if (result.success) {
-                // Login successful - AuthContext state update will trigger re-render
+                // Login successful - Force redirect immediately
+                console.log("Login success, redirecting to dashboard...");
+                navigate('/dashboard');
                 return;
             }
 
@@ -68,7 +79,7 @@ const AdminLogin: React.FC = () => {
                     TN
                 </div>
                 <h1 className="font-display font-bold text-3xl tracking-tight text-white">
-                    Admin<span className="text-brand-purple">Portal</span>
+                    Secure<span className="text-brand-purple">Portal</span>
                 </h1>
                 <p className="text-gray-500 text-sm mt-1">Restricted Access • Authorized Personnel Only</p>
             </div>
@@ -142,7 +153,7 @@ const AdminLogin: React.FC = () => {
                     <ArrowRight size={12} className="rotate-180" /> Return to Website
                 </a>
                 <p className="text-[10px] text-gray-600 font-mono">
-                    SECURED CONNECTION • v2.4.0
+                    SECURED CONNECTION • v2.5.0 (Secure)
                 </p>
             </div>
         </div>

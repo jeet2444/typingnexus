@@ -87,9 +87,10 @@ import {
   TrendingUp,
   Send,
   Image as ImageIcon,
-  Target
+  Target,
+  Package
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 import { supabase } from '../utils/supabaseClient';
@@ -106,6 +107,8 @@ import {
   hasProAccess
 } from '../utils/adminStore';
 import { getAdminLogs, addAdminLog, ActivityLog } from '../utils/adminLogs'; // Import Logger
+import CPTTestManager from './CPTTestManager';
+import ComboPackManager from './ComboPackManager';
 
 const CATEGORIES = {
   SSC: "SSC Standard",
@@ -2297,6 +2300,7 @@ const AdminPanel: React.FC = () => {
   const [store, setStore] = useState<any>(null); // Start null to detect load
   const [error, setError] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadStore = async () => {
@@ -2363,6 +2367,7 @@ const AdminPanel: React.FC = () => {
           <SidebarItem id="rules" activeTab={activeTab} setActiveTab={(id: string) => { setActiveTab(id); setMobileMenuOpen(false); }} icon={Calculator} label="Rule Engine" />
           {/* Visit Site Button */}
           {/* Visit Site Button - Fixed to point to root domain with auto-login session */}
+          {/* Visit Site Button - Fixed to point to root domain with auto-login session */}
           <button
             onClick={async () => {
               console.log("Visit Website clicked. Fetching session...");
@@ -2375,7 +2380,9 @@ const AdminPanel: React.FC = () => {
                 else console.error("Refresh failed:", refreshError);
               }
 
-              const baseUrl = window.location.hostname.includes('localhost') ? 'http://localhost:5173' : 'https://typingnexus.in'; // Target main domain
+              const baseUrl = window.location.hostname.includes('localhost')
+                ? 'http://localhost:5173'
+                : 'https://typingnexus.in'; // Target main domain
 
               if (session) {
                 console.log("Session found, redirecting with tokens...", session.user.email);
@@ -2429,11 +2436,13 @@ const AdminPanel: React.FC = () => {
           <SidebarItem id="analytics" activeTab={activeTab} setActiveTab={(id: string) => { setActiveTab(id); setMobileMenuOpen(false); }} icon={BarChart3} label="Analytics" />
           <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-6 mb-2">Content</p>
           <SidebarItem id="passages" activeTab={activeTab} setActiveTab={(id: string) => { setActiveTab(id); setMobileMenuOpen(false); }} icon={FileStack} label="Passages" />
+          <SidebarItem id="cpt-tests" activeTab={activeTab} setActiveTab={(id: string) => { setActiveTab(id); setMobileMenuOpen(false); }} icon={FileSpreadsheet} label="CPT Management" />
+          <SidebarItem id="combo-packs" activeTab={activeTab} setActiveTab={(id: string) => { setActiveTab(id); setMobileMenuOpen(false); }} icon={Package} label="Combo Packs" />
           <SidebarItem id="certificates" activeTab={activeTab} setActiveTab={(id: string) => { setActiveTab(id); setMobileMenuOpen(false); }} icon={Award} label="Certificates" />
           <SidebarItem id="achievements" activeTab={activeTab} setActiveTab={(id: string) => { setActiveTab(id); setMobileMenuOpen(false); }} icon={Trophy} label="Gamification" />
         </div>
         <div className="p-4 border-t border-gray-800 mt-auto bg-gray-900/50">
-          <button onClick={() => logout()} className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold transition-all text-xs text-red-400 hover:bg-red-900/20 bg-gray-800 border border-red-900/50 shadow-lg group">
+          <button onClick={() => { logout(); navigate('/'); }} className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold transition-all text-xs text-red-400 hover:bg-red-900/20 bg-gray-800 border border-red-900/50 shadow-lg group">
             <LogOut size={16} className="group-hover:rotate-12 transition-transform" />
             <span>Logout Securely</span>
           </button>
@@ -2475,6 +2484,8 @@ const AdminPanel: React.FC = () => {
             {activeTab === 'lessons' && <LessonsView />}
             {activeTab === 'analytics' && <AnalyticsView store={store} />}
             {activeTab === 'passages' && <PassageManagerView passages={store.passages} setPassages={(p: any) => saveAdminStore({ ...store, passages: p })} />}
+            {activeTab === 'cpt-tests' && <CPTTestManager />}
+            {activeTab === 'combo-packs' && <ComboPackManager />}
             {activeTab === 'certificates' && <CertificateView templates={store.certificateTemplates} criteria={store.certificateCriteria} setCriteria={(c: any) => saveAdminStore({ ...store, certificateCriteria: c })} />}
             {activeTab === 'achievements' && <AchievementsView achievements={store.achievements} setAchievements={(a: any) => saveAdminStore({ ...store, achievements: a })} settings={store.gamificationSettings} setSettings={(s: any) => saveAdminStore({ ...store, gamificationSettings: s })} />}
           </div>

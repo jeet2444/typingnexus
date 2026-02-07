@@ -2,54 +2,25 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FileSpreadsheet, FileText, ArrowLeft, Play, Lock, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { getAdminStore, hasTestAccess } from '../utils/adminStore';
 
 const CPTMenu: React.FC = () => {
-   const { hasPremiumAccess, isAuthenticated } = useAuth();
+   const { hasPremiumAccess, isAuthenticated, currentUser } = useAuth();
    const { type } = useParams<{ type: 'excel' | 'word' }>();
    const navigate = useNavigate();
    const isExcel = type === 'excel';
 
-   const LESSON_TITLES: Record<string, string[]> = {
-      word: [
-         "Basic Character & Paragraph Formatting",
-         "Table Creation & Cell Merging",
-         "Advanced Page Layout & Borders",
-         "Hindi Document (Mangal) Formatting",
-         "Official Multi-page Document Setup",
-         "Header, Footer & Page Numbering",
-         "Bullets, Numbering & Multi-level Lists",
-         "Insert Shapes, Images & Text Wrap",
-         "Watermark & Security Settings",
-         "Certificate & Award Design",
-         "Technical Manual Formatting",
-         "Legal Document (Krutidev) Formatting",
-         "Final Mock Test - Mixed Tasks"
-      ],
-      excel: [
-         "Data Entry & Basic Arithmetic",
-         "SUM, AVERAGE, MIN, MAX Functions",
-         "Cell Referencing & Percentage Calc",
-         "Conditional Formatting (Data Bars)",
-         "Salary Sheet with Basic Filters",
-         "Budget Allocation & Pie Charts",
-         "Grade Sheet & Result Processing",
-         "Inventory Management with COUNTIF",
-         "Quarterly Sales Report analysis",
-         "Employee Payroll with TAX calc",
-         "VLOOKUP & Essential Lookups",
-         "Data Validation & Dropdowns",
-         "Comprehensive Excel Final Test"
-      ]
-   };
+   const store = getAdminStore();
+   const availableTests = store.cptTests.filter(t => t.type === (isExcel ? 'Excel' : 'Word'));
 
-   const LESSONS = Array.from({ length: 13 }, (_, i) => ({
-      id: i + 1,
-      title: isExcel ? LESSON_TITLES.excel[i] : LESSON_TITLES.word[i],
-      label: isExcel ? `Exercise ${i + 1}` : `Test ${i + 1}`,
-      language: (isExcel || i === 3 || i === 11) ? "Hindi" : "English", // Mix of lang
+   const LESSONS = availableTests.map((test, idx) => ({
+      id: test.id,
+      title: test.title,
+      label: isExcel ? `Exercise ${idx + 1}` : `Test ${idx + 1}`,
+      language: test.language || 'Bilingual',
       duration: 10,
-      // Show only ONE free (index 0). All others locked.
-      locked: i > 0 && !hasPremiumAccess
+      locked: !hasTestAccess(currentUser, test.id),
+      isFree: test.isFree
    }));
 
    const handleStartTest = (lessonId: number) => {
@@ -88,7 +59,7 @@ const CPTMenu: React.FC = () => {
                         <div className="flex items-center gap-6 w-full md:w-auto mb-3 md:mb-0">
                            <span className="font-bold text-gray-400 w-24">{lesson.label}</span>
                            <span className="text-gray-200 font-medium text-sm flex-grow md:flex-grow-0">{lesson.title}</span>
-                           {idx === 0 && (
+                           {lesson.isFree && (
                               <span className="bg-green-500/10 text-green-400 border border-green-500/30 text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(74,222,128,0.2)]">
                                  Free Trial
                               </span>
@@ -117,7 +88,7 @@ const CPTMenu: React.FC = () => {
                                  onClick={() => handleStartTest(lesson.id)}
                                  className={`px-4 py-2 text-white text-xs font-bold rounded-lg shadow-lg min-w-[140px] transition-all flex items-center justify-center gap-2 ${isExcel ? 'bg-green-600 hover:bg-green-500 shadow-green-900/40' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/40'}`}
                               >
-                                 <Play size={12} fill="currentColor" /> {idx === 0 ? "TRY FOR FREE" : "START TEST"}
+                                 <Play size={12} fill="currentColor" /> {lesson.isFree ? "TRY FOR FREE" : "START TEST"}
                               </button>
                            )}
                         </div>

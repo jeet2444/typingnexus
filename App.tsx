@@ -15,8 +15,8 @@ import PracticeLibrary from './components/PracticeLibrary';
 import TypingPractice from './components/TypingPractice';
 import ExcelTest from './components/ExcelTest';
 import WordFormattingTest from './components/WordFormattingTest';
-import AdminPanel from './components/AdminPanel';
-import AdminLogin from './components/AdminLogin';
+// import AdminPanel from './components/AdminPanel'; // Removed for Lazy Loading
+// import AdminLogin from './components/AdminLogin'; // Removed for Lazy Loading
 import TypingTutorial from './components/TypingTutorial';
 import CPTMenu from './components/CPTMenu';
 import ExamInstructions from './components/ExamInstructions';
@@ -41,20 +41,48 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boole
   return <>{children}</>;
 };
 
+// Lazy Load Admin Components for Security & Performance
+const AdminPanel = React.lazy(() => import('./components/AdminPanel'));
+const AdminLogin = React.lazy(() => import('./components/AdminLogin'));
+
 const AppContent: React.FC = () => {
   const { isAdmin } = useAuth();
+  // BUILD_TARGET can be 'admin', 'website', or 'universal' (default)
+  // We will force this to be specific builds to solve the user's issue.
+  const buildTarget = import.meta.env.VITE_BUILD_TARGET || 'universal';
+  console.log("Current Build Target:", buildTarget);
+
   const hostname = window.location.hostname.toLowerCase();
 
-  // 1. Handle Admin Subdomain
+  // 1. ADMIN BUILD or Subdomain Check
   const isAdminSubdomain = hostname === 'admin.typingnexus.in' || hostname.startsWith('admin.');
-  if (isAdminSubdomain) {
+  const shouldRenderAdmin = buildTarget === 'admin' || (buildTarget === 'universal' && isAdminSubdomain);
+
+  if (shouldRenderAdmin) {
+    // Dynamic Title for Admin
+    React.useEffect(() => {
+      document.title = "Typing Nexus - Secure Admin";
+    }, []);
+
     return (
       <div className="min-h-screen flex flex-col font-sans text-gray-200 bg-gray-950">
-        <Routes>
-          <Route path="/*" element={isAdmin ? <AdminPanel /> : <AdminLogin />} />
-        </Routes>
+        <React.Suspense fallback={<div className="flex h-screen items-center justify-center">Loading Admin Portal...</div>}>
+          <Routes>
+            <Route path="/*" element={isAdmin ? <AdminPanel /> : <AdminLogin />} />
+            {/* Catch-all: If they go to /anything-else on admin domain, send them to login/panel */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </React.Suspense>
       </div>
     );
+  }
+
+  // 2. WEBSITE BUILD (Force Main Site)
+  // If we are in 'website' mode, we NEVER show admin, even if URL says admin.
+  if (buildTarget === 'website') {
+    // Fall through to main site render
+  } else if (isAdminSubdomain && buildTarget === 'universal') {
+    // Already handled above
   }
 
   // Handle Legacy Test Domain (Redirect to Production)
@@ -75,11 +103,6 @@ const AppContent: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col font-sans text-gray-200">
       <Routes>
-        {/* Admin Panel - Protected route */}
-        <Route path="/admin/*" element={<ProtectedRoute requireAdmin={true}><AdminPanel /></ProtectedRoute>} />
-
-
-
         {/* GLOBAL LAYOUT ROUTES (With Ads) */}
         <Route element={<GlobalAdLayout />}>
           <Route path="/" element={<Home />} />
@@ -126,9 +149,19 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // Determine if we are on the admin subdomain
+  const isAdminDomain = window.location.hostname.startsWith('admin');
+  // If on admin subdomain, basename is '/'. If on main domain with /admin path, basename is '/admin'
+  // But since we are building with relative base './', we let the browser handle it mostly.
+  // However, React Router needs to know if it's running in a subdirectory.
+  // For admin.typingnexus.in, pathname starts with /, so basename '/'.
+  // For typingnexus.in/admin, pathname starts with /admin, so basename '/admin'.
+
+  const basename = window.location.pathname.startsWith('/admin') ? '/admin' : '/';
+
   return (
     <AuthProvider>
-      <Router>
+      <Router basename={basename}>
         <AppContent />
       </Router>
     </AuthProvider>

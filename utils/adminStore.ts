@@ -1,6 +1,7 @@
 
 import { UserProfileData, DEFAULT_USER } from './userData';
 import { supabase } from './supabaseClient';
+import { INITIAL_CPT_EXCEL, INITIAL_CPT_WORD } from './initialCptData';
 
 // --- Types ---
 
@@ -14,6 +15,7 @@ export interface AdminUser {
     status: 'Active' | 'Inactive';
     authMethod: string;
     role: 'Super Admin' | 'Admin' | 'User' | 'Moderator';
+    purchasedPackIds?: string[]; // IDs of ComboPacks purchased
 }
 
 export interface AdminRule {
@@ -279,6 +281,41 @@ export interface UserProgress {
     lessonsCompleted: number;
 }
 
+// --- NEW: CPT & Combo Pack Types ---
+export interface CPTQuestion {
+    id: number;
+    text: string;
+    textHi?: string; // Hindi Text
+    marks: number;
+}
+
+export interface CPTTest {
+    id: number;
+    title: string;
+    type: 'Word' | 'Excel';
+    data?: any[]; // For Excel: Grid Data
+    tasks?: CPTQuestion[]; // For Excel: Tasks
+    content?: string; // For Word: HTML Content
+    questions?: CPTQuestion[]; // For Word: Formatting Questions
+    instructions?: string;
+    language?: 'English' | 'Hindi' | 'Bilingual';
+    isFree?: boolean; // New field for Free Trial
+}
+
+export interface ComboPack {
+    id: string; // UUID
+    title: string;
+    price: number;
+    description: string;
+    features: string[];
+    content: {
+        typingPassageIds: number[];
+        cptTestIds: number[];
+    };
+    isActive: boolean;
+    coverImage?: string;
+}
+
 interface AdminStore {
     users: AdminUser[];
     rules: AdminRule[];
@@ -304,6 +341,8 @@ interface AdminStore {
     achievements: Achievement[];
     gamificationSettings: GamificationSettings;
     userProgress: UserProgress[];
+    cptTests: CPTTest[];
+    comboPacks: ComboPack[];
     version?: number;
 }
 
@@ -474,7 +513,9 @@ export const getAdminStore = (): AdminStore => {
                 { level: 5, minXp: 5000, title: "God Mode", icon: "⚡" }
             ]
         },
-        userProgress: []
+        userProgress: [],
+        cptTests: [...INITIAL_CPT_EXCEL, ...INITIAL_CPT_WORD] as CPTTest[],
+        comboPacks: []
     };
 
 
@@ -536,7 +577,9 @@ export const getAdminStore = (): AdminStore => {
             certificateCriteria: storedData.certificateCriteria || defaultStore.certificateCriteria,
             achievements: storedData.achievements || defaultStore.achievements,
             gamificationSettings: storedData.gamificationSettings || defaultStore.gamificationSettings,
-            userProgress: storedData.userProgress || defaultStore.userProgress
+            userProgress: storedData.userProgress || defaultStore.userProgress,
+            cptTests: storedData.cptTests || defaultStore.cptTests,
+            comboPacks: storedData.comboPacks || defaultStore.comboPacks
         };
     }
 
@@ -566,7 +609,9 @@ export const saveAdminStore = async (data: AdminStore) => {
             certificateTemplates: data.certificateTemplates,
             certificateCriteria: data.certificateCriteria,
             achievements: data.achievements,
-            gamificationSettings: data.gamificationSettings
+            gamificationSettings: data.gamificationSettings,
+            cptTests: data.cptTests,
+            comboPacks: data.comboPacks
         };
 
         if (data.settings) { // Simple check to ensure we have data
@@ -629,6 +674,8 @@ export const syncSettingsFromHost = async () => {
                 if (externalData.certificateCriteria) store.certificateCriteria = externalData.certificateCriteria;
                 if (externalData.achievements) store.achievements = externalData.achievements;
                 if (externalData.gamificationSettings) store.gamificationSettings = externalData.gamificationSettings;
+                if (externalData.cptTests) store.cptTests = externalData.cptTests;
+                if (externalData.comboPacks) store.comboPacks = externalData.comboPacks;
 
                 localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(store));
                 window.dispatchEvent(new Event('adminStoreUpdate'));
@@ -699,5 +746,43 @@ export const hasProAccess = (user: AdminUser | null): boolean => {
     // Admins and Super Admins always have full access
     if (user.role === 'Admin' || user.role === 'Super Admin') return true;
     return user.plan.includes('Pro') || user.plan.includes('Premium');
+};
+
+export const hasPackAccess = (user: AdminUser | null, packId: string): boolean => {
+    if (!user) return false;
+    if (hasProAccess(user)) return true; // Pro users get everything? Or maybe not. Let's assume yes for now or check requirements.
+    // If Pro users only get "Pro" exams, then maybe specific packs are separate.
+    // For now, let's say Admin/SuperAdmin have access.
+    if (user.role === 'Admin' || user.role === 'Super Admin') return true;
+
+    return user.purchasedPackIds?.includes(packId) || false;
+};
+
+export const hasTestAccess = (user: AdminUser | null, testId: number): boolean => {
+    const store = getAdminStore();
+
+    // 0. Check if test is Free
+    const test = store.cptTests.find(t => t.id === testId);
+    if (test?.isFree) return true;
+
+    // 1. No user? No access
+    if (!user) return false;
+
+    // 2. Pro Access
+    if (hasProAccess(user)) return true;
+
+    // 3. Admin/Super Admin
+    if (user.role === 'Admin' || user.role === 'Super Admin') return true;
+
+    // 4. Check if test is part of any purchased pack
+    const purchasedPackIds = user.purchasedPackIds || [];
+
+    // Find all packs that contain this testId
+    const packsWithTest = store.comboPacks.filter(p => p.content.cptTestIds.includes(testId));
+
+    // Check if user owns any of them
+    const hasAccessViaPack = packsWithTest.some(p => purchasedPackIds.includes(p.id));
+
+    return hasAccessViaPack;
 };
 
