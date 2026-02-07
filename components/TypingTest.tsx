@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings, X, Volume2, Maximize, Layout, Type, RefreshCw, Award, Sparkles, Highlighter, Keyboard, XCircle, Percent, Gauge, MoveRight, Delete, ToggleLeft, ToggleRight, Clock, Check, Target, AlertTriangle, Trophy, ChevronDown, Play, Music } from 'lucide-react';
+import { Settings, X, Volume2, Maximize, Layout, Type, RefreshCw, Award, Sparkles, Highlighter, Keyboard, XCircle, Percent, Gauge, MoveRight, Delete, ToggleLeft, ToggleRight, Clock, Check, Target, AlertTriangle, Trophy, ChevronDown, Play, Music, Zap, Activity } from 'lucide-react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { processTestResult, Achievement } from '../utils/achievementSystem';
 import { getUserProfile } from '../utils/userData';
@@ -495,15 +495,27 @@ const TypingTest: React.FC = () => {
       let isError = false;
       if (index < inputChars.length) {
         if (inputChars[index] === char) {
-          colorClass = 'text-green-600 font-medium';
+          // If highlight OFF, colorClass should already be black from below logic?
+          // No, this loop runs first.
+          if (!settings.highlight) {
+            colorClass = 'text-black';
+          } else {
+            colorClass = 'text-green-600 font-medium';
+          }
         } else {
           isError = true;
-          if (char === ' ') {
-            bgClass = 'bg-red-500/50';
-            colorClass = 'text-transparent';
+          if (!settings.highlight) {
+            // If OFF, just black. No red/green background
+            colorClass = 'text-black';
+            bgClass = 'bg-transparent';
           } else {
-            colorClass = 'text-red-600 font-bold';
-            bgClass = 'bg-red-100';
+            if (char === ' ') {
+              bgClass = 'bg-red-500/50';
+              colorClass = 'text-transparent';
+            } else {
+              colorClass = 'text-red-600 font-bold';
+              bgClass = 'bg-red-100';
+            }
           }
         }
       } else {
@@ -619,148 +631,125 @@ const TypingTest: React.FC = () => {
   const renderDashboard = () => {
     if (!testResult) return null;
     const ComparisonCard = ({ title, text, type }: { title: string, text: string, type: 'original' | 'typed' }) => (
-      <div className="flex flex-col h-full">
-        <div className="bg-gray-100 p-2 text-xs font-bold text-gray-700 border-b border-gray-200 uppercase tracking-wide">
-          {title}
+      <div className="flex flex-col h-full bg-black/40 rounded-xl border border-brand-purple/30 overflow-hidden">
+        <div className="bg-brand-purple/20 p-2 text-xs font-bold text-brand-purple border-b border-brand-purple/30 uppercase tracking-wide flex justify-between items-center">
+          <span>{title}</span>
+          {type === 'typed' && <span className="text-[10px] opacity-70">Comparison</span>}
         </div>
-        <div className={`flex-grow p-4 text-sm leading-relaxed overflow-y-auto max-h-[300px] whitespace-pre-wrap ${settings.fontFamily === 'mangal' ? 'font-mangal' : 'font-mono'} ${type === 'typed' ? 'bg-white' : 'bg-gray-50'}`}>
+        <div className={`flex-grow p-4 text-sm leading-relaxed overflow-y-auto max-h-[300px] whitespace-pre-wrap ${settings.fontFamily === 'mangal' ? 'font-mangal' : 'font-mono'} text-gray-300 custom-scrollbar`}>
           {type === 'typed' ? (
             splitByGraphemes(text, settings.language === 'hindi' ? 'hi' : 'en').map((char, i) => {
               const originalChar = splitByGraphemes(currentText, settings.language === 'hindi' ? 'hi' : 'en')[i];
               const isCorrect = char === originalChar;
               return (
-                <span key={i} className={isCorrect ? 'text-gray-800' : 'text-red-500 bg-red-50 font-bold'}>
+                <span key={i} className={isCorrect ? 'text-green-400' : 'text-red-500 bg-red-900/20 font-bold border-b border-red-500/50'}>
                   {char}
                 </span>
               );
             })
           ) : (
-            text
+            <span className="text-gray-400">{text}</span>
           )}
         </div>
       </div>
     );
-    const MetricCard = ({ label, value, icon, subIcon }: any) => (
-      <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm relative flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
-        <div>
-          <div className="text-gray-600 text-sm font-medium mb-1">{label}</div>
-          <div className="text-3xl font-display font-bold text-brand-black">{value}</div>
+
+    const MetricCard = ({ label, value, icon, subIcon, highlight }: any) => (
+      <div className={`bg-[#0a0a0f] border ${highlight ? 'border-brand-purple shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'border-gray-800'} rounded-xl p-5 relative flex flex-col justify-between h-32 hover:border-brand-purple/50 transition-all group overflow-hidden`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div className="relative z-10">
+          <div className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">{label}</div>
+          <div className={`text-3xl font-display font-bold ${highlight ? 'text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'text-gray-200'}`}>{value}</div>
         </div>
-        <div className="absolute top-4 right-4 text-gray-400">{icon}</div>
-        {subIcon && <div className="absolute bottom-4 right-4 text-gray-400">{subIcon}</div>}
+        <div className={`absolute top-4 right-4 ${highlight ? 'text-brand-purple' : 'text-gray-600 group-hover:text-gray-400'} transition-colors`}>{icon}</div>
+        {subIcon && <div className="absolute bottom-4 right-4 text-gray-600">{subIcon}</div>}
       </div>
     );
+
     return (
-      <div className="fixed inset-0 z-50 bg-gray-100 overflow-y-auto animate-in fade-in duration-300">
+      <div className="fixed inset-0 z-[100] bg-[#050507] overflow-y-auto animate-in fade-in duration-300 custom-scrollbar">
         <div className="max-w-7xl mx-auto p-4 md:p-8">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-            <div className="flex items-center gap-4">
-              <div className="bg-brand-black text-white p-3 rounded-md font-bold font-display text-xl">TN</div>
-              <h1 className="text-3xl font-display font-bold text-gray-900">Performance Dashboard</h1>
-            </div>
-            <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm">
-              <span className="text-sm font-bold text-gray-600">Calculated on Total Time</span>
-              <Check className="text-green-600" size={20} />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 text-sm">
-            <div>
-              <span className="font-bold text-gray-900 block mb-1">Exam Title:</span>
-              <span className="text-gray-600">Demo {settings.language === 'hindi' ? 'Hindi' : 'English'} Typing</span>
-            </div>
-            <div>
-              <span className="font-bold text-gray-900 block mb-1">Passage Title:</span>
-              <span className="text-gray-600">Standard Test</span>
-            </div>
-            <div>
-              <span className="font-bold text-gray-900 block mb-1">Total Key Depression:</span>
-              <span className="text-gray-600">{testResult.keystrokes}</span>
-            </div>
-            <div className="flex gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6 border-b border-gray-800 pb-6">
+            <div className="flex items-center gap-5">
+              <div className="bg-brand-purple text-white p-3 rounded-lg font-bold font-display text-2xl shadow-[0_0_20px_rgba(168,85,247,0.5)]">TN</div>
               <div>
-                <span className="font-bold text-gray-900 block mb-1">Typing Date:</span>
-                <span className="text-gray-600">{new Date().toLocaleDateString()}</span>
-              </div>
-              <div>
-                <span className="font-bold text-gray-900 block mb-1">Time Taken:</span>
-                <span className="text-gray-600">{testResult.timeTaken}</span>
+                <h1 className="text-4xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500">Performance Dashboard</h1>
+                <p className="text-gray-400 text-sm mt-1">Detailed Analysis of your Typing Session</p>
               </div>
             </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <MetricCard label="Key Depressions Typed" value={testResult.keystrokes} icon={<Keyboard size={24} />} />
-            <MetricCard label="Full Mistakes (key strokes)" value={testResult.fullMistakes} icon={<XCircle size={24} />} />
-            <MetricCard label="Half Mistakes (key strokes)" value={testResult.halfMistakes} icon={<div className="font-mono font-bold text-lg">{`{ }`}</div>} />
-            <MetricCard label="Error %" value={testResult.accuracy === "100" ? "0" : (100 - parseFloat(testResult.accuracy)).toFixed(2)} icon={<Percent size={24} />} />
-            <MetricCard label="Gross Speed (wpm)" value={testResult.grossWpm} icon={<Gauge size={24} />} />
-            <MetricCard label="Net Speed (wpm)" value={testResult.netWpm} icon={<Gauge size={24} className="text-brand-purple" />} />
-            <MetricCard label="Extra Words Typed" value={Math.max(0, inputText.split(' ').length - currentText.split(' ').length)} icon={<MoveRight size={24} />} />
-            <MetricCard label="Backspace Count" value={testResult.backspaceCount} icon={<Delete size={24} />} />
+            <div className="flex items-center gap-3 bg-gray-900/50 px-5 py-2.5 rounded-full border border-gray-700 backdrop-blur-md">
+              <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">Total Time Calculation</span>
+              <Check className="text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]" size={18} />
+            </div>
           </div>
 
-          <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200 mb-6 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${showDetailedComparison ? 'bg-purple-100 text-brand-purple' : 'bg-gray-100 text-gray-400'}`}>
-                <Layout size={20} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 text-sm">
+            <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-800">
+              <span className="font-bold text-gray-500 uppercase tracking-wider text-xs block mb-2">Exam Title</span>
+              <span className="text-white font-medium text-lg block truncate">Demo {settings.language === 'hindi' ? 'Hindi' : 'English'} Typing</span>
+            </div>
+            <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-800">
+              <span className="font-bold text-gray-500 uppercase tracking-wider text-xs block mb-2">Passage</span>
+              <span className="text-white font-medium text-lg block truncate">Standard Test</span>
+            </div>
+            <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-800">
+              <span className="font-bold text-gray-500 uppercase tracking-wider text-xs block mb-2">Total Keystrokes</span>
+              <span className="text-white font-medium text-lg block">{testResult.keystrokes}</span>
+            </div>
+            <div className="bg-gray-900/30 p-4 rounded-lg border border-gray-800">
+              <span className="font-bold text-gray-500 uppercase tracking-wider text-xs block mb-2">Session Info</span>
+              <div className="flex justify-between">
+                <div className="text-gray-300">{new Date().toLocaleDateString()}</div>
+                <div className="text-white font-bold">{testResult.timeTaken}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <MetricCard label="Net Speed (WPM)" value={testResult.netWpm} icon={<Gauge size={24} />} highlight={true} subIcon={<Zap size={16} className="text-yellow-400" />} />
+            <MetricCard label="Accuracy (%)" value={testResult.accuracy === "100" ? "100" : (100 - parseFloat(testResult.accuracy)).toFixed(2)} icon={<Percent size={24} />} highlight={true} />
+            <MetricCard label="Gross Speed (WPM)" value={testResult.grossWpm} icon={<Activity size={24} />} />
+            <MetricCard label="Error Rate %" value={testResult.accuracy} icon={<AlertTriangle size={24} />} />
+
+            <MetricCard label="Keystrokes" value={testResult.keystrokes} icon={<Keyboard size={24} />} />
+            <MetricCard label="Full Mistakes" value={testResult.fullMistakes} icon={<XCircle size={24} />} />
+            <MetricCard label="Half Mistakes" value={testResult.halfMistakes} icon={<div className="font-mono font-bold text-lg">{`{}`}</div>} />
+            <MetricCard label="Backspaces" value={testResult.backspaceCount} icon={<Delete size={24} />} />
+          </div>
+
+          <div className="flex items-center justify-between bg-[#0a0a0f] p-5 rounded-xl border border-gray-800 mb-8 shadow-lg hover:border-gray-700 transition-colors">
+            <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-lg ${showDetailedComparison ? 'bg-brand-purple/20 text-brand-purple' : 'bg-gray-800 text-gray-500'}`}>
+                <Layout size={24} />
               </div>
               <div>
-                <span className="font-bold text-gray-800 block">Detailed Comparison View</span>
-                <span className="text-xs text-gray-500">Compare your typed text with the original passage side-by-side</span>
+                <span className="font-bold text-white text-lg block">Detailed Comparison View</span>
+                <span className="text-sm text-gray-500">Compare your typed text with the original passage side-by-side</span>
               </div>
             </div>
             <button
               onClick={() => setShowDetailedComparison(!showDetailedComparison)}
-              className={`w-14 h-7 rounded-full transition-all duration-300 relative focus:outline-none ring-offset-2 focus:ring-2 focus:ring-brand-purple ${showDetailedComparison ? 'bg-brand-purple' : 'bg-gray-300'}`}
+              className={`w-14 h-8 rounded-full transition-all duration-300 relative focus:outline-none focus:ring-2 focus:ring-brand-purple/50 ${showDetailedComparison ? 'bg-brand-purple shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'bg-gray-800 border border-gray-700'}`}
             >
-              <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 shadow-sm ${showDetailedComparison ? 'translate-x-7' : ''}`}></div>
+              <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform duration-300 shadow-sm ${showDetailedComparison ? 'translate-x-6' : ''}`}></div>
             </button>
           </div>
 
           {showDetailedComparison && (
-            <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
-              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+            <div className="bg-[#0a0a0f] border border-gray-800 rounded-xl shadow-2xl overflow-hidden mb-10 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-800">
                 <ComparisonCard title="Original Passage" text={currentText} type="original" />
                 <ComparisonCard title="Typed Passage" text={inputText} type="typed" />
               </div>
             </div>
           )}
 
-          {remedialDrill && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 animate-pulse">
-              <div>
-                <h3 className="text-xl font-bold text-blue-900 mb-1 flex items-center gap-2">
-                  <Sparkles size={20} className="text-blue-500" /> AI Performance Coach
-                </h3>
-                <p className="text-blue-700 max-w-xl">
-                  I noticed you struggled with <strong>{remedialDrill.weakKeys.join(', ')}</strong>.
-                  I've generated a specific 2-minute drill to help you fix this.
-                </p>
-              </div>
-              <button
-                onClick={startRemedialDrill}
-                className="whitespace-nowrap px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-all flex items-center gap-2"
-              >
-                <RefreshCw size={18} /> Start Remedial Drill
-              </button>
-            </div>
-          )}
-
-          {newBadges.length > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8 flex items-center gap-4 animate-bounce">
-              <Sparkles className="text-brand-yellow" />
-              <div>
-                <h4 className="font-bold text-yellow-800">New Achievements Unlocked!</h4>
-                <p className="text-sm text-yellow-700">{newBadges.map(b => b.title).join(', ')}</p>
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-center gap-4 pb-12">
+          <div className="flex justify-center gap-6 pb-12">
             <Link to="/exams">
-              <button className="px-8 py-3 rounded-lg border-2 border-gray-300 font-bold hover:bg-gray-50 transition-colors">Back to Exams</button>
+              <button className="px-8 py-3.5 rounded-xl border border-gray-700 font-bold text-gray-300 hover:bg-gray-800 hover:text-white transition-all hover:border-gray-600">Back to Exams</button>
             </Link>
-            <button onClick={resetTest} className="px-8 py-3 rounded-lg bg-brand-black text-white font-bold hover:bg-gray-800 flex items-center gap-2 transition-colors">
-              <RefreshCw size={18} /> Try Again
+            <button onClick={resetTest} className="px-10 py-3.5 rounded-xl bg-gradient-to-r from-brand-purple to-blue-600 text-white font-bold hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:scale-105 transition-all flex items-center gap-3">
+              <RefreshCw size={20} /> Try Again
             </button>
           </div>
         </div>
