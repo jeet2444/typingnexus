@@ -154,10 +154,37 @@ const TypingTest: React.FC = () => {
 
     if (passageId) {
       const store = getAdminStore();
-      const passage = store.passages?.find(p => p.id === parseInt(passageId));
+
+      // 1. Try finding in Passages (Standard + Virtual injected by getAdminStore)
+      let passage = store.passages?.find(p => p.id === parseInt(passageId));
+
+      // 2. Fallback: If not found, check if it's a negative ID (Virtual) and try to find matching Exam
+      if (!passage && parseInt(passageId) < 0) {
+        const virtualExamId = Math.abs(parseInt(passageId));
+        const exam = store.exams.find(e => e.id === virtualExamId);
+        if (exam && exam.content) {
+          passage = {
+            id: -exam.id,
+            title: exam.contentTitle || exam.title,
+            content: exam.content,
+            language: exam.language as any,
+            difficulty: 'Medium',
+            category: 'Exam',
+            wordCount: exam.content.split(/\s+/).length,
+            tags: ['Exam'],
+            status: 'Active',
+            createdDate: new Date().toISOString()
+          };
+        }
+      }
+
       if (passage) {
         setPassageContent(passage.content);
         setPassageAudioUrl(passage.audioUrl || null);
+        // Only override if not already set by Exam Logic
+        if (!currentExamMode) {
+          setTimeLeft(600); // Default 10 mins if just passage
+        }
       }
     }
   }, [searchParams, isAuthenticated, navigate]);
@@ -165,7 +192,7 @@ const TypingTest: React.FC = () => {
   // Settings State
   const [settings, setSettings] = useState<TestSettings>({
     backspace: 'on',
-    highlight: true,
+    highlight: false, // TCS Default: Highlight OFF
     autoScroll: true,
     sound: false,
     extraSpace: true,
@@ -888,194 +915,130 @@ const TypingTest: React.FC = () => {
     );
   }
 
-  // Standard Render (Existing Layout)
-  return (
-    <div className="flex flex-col h-[calc(100vh-65px)] overflow-hidden">
-      {showResult && renderDashboard()}
-      {pasteWarning && (
-        <div className="fixed top-28 left-1/2 transform -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded shadow-neo font-bold flex items-center gap-3 animate-bounce border-2 border-black w-11/12 md:w-auto justify-center">
-          <div className="text-xs uppercase tracking-wider opacity-90">Violation Alert</div>
-          <div>Copy-Paste is disabled for this test!</div>
-        </div>
-      )}
-      <div className="bg-black text-white px-4 sm:px-6 py-2 flex justify-between items-center text-sm font-bold shrink-0 z-40">
-        {/* ... (rest of standard layout) ... */}
-        <div className="flex items-center gap-4 sm:gap-6">
-          <div className="truncate max-w-[150px] sm:max-w-none">Demo {settings.language === 'hindi' ? 'Hindi' : 'English'} Typing</div>
-          <div className="hidden md:flex items-center gap-4 text-gray-300 text-xs sm:text-sm">
-            <span>Speed: <span className="text-white">{Math.round((keystrokes / 5) / ((getTotalDuration() - timeLeft) / 60) || 0)} WPM</span></span>
-            <span>Acc: <span className="text-white">{accuracy}%</span></span>
-            <span>Time: <span className="text-white">{formatTimeMinutes(timeLeft)}</span></span>
+  // TCS Layout Render
+  const renderTCSLayout = () => {
+    return (
+      <div className="flex flex-col h-screen overflow-hidden bg-[#e0e0e0] font-sans">
+        {/* TCS Header */}
+        <div className="bg-[#3085d6] text-white px-4 py-2 flex justify-between items-center shadow-md shrink-0 h-16">
+          <div>
+            <h1 className="font-bold text-lg">System Name: C001</h1>
+            <div className="text-xs text-blue-100">{userProfile?.name || 'Candidate Name'}</div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <div className="text-xs text-blue-100 opacity-80">Subject</div>
+              <div className="font-bold">{settings.language === 'hindi' ? 'Hindi Typing' : 'English Typing'}</div>
+            </div>
+            <div className="bg-white/20 px-3 py-1 rounded flex flex-col items-center min-w-[80px]">
+              <div className="text-xs text-blue-100">Time Left</div>
+              <div className="font-bold font-mono text-xl leading-none">{formatTimeMinutes(timeLeft).split(' ')[0]}</div>
+            </div>
+            <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-white/10 rounded transition-colors">
+              <Settings size={20} />
+            </button>
+            <button onClick={finishTest} className="bg-[#e91e63] hover:bg-[#d81b60] text-white font-bold py-1.5 px-4 rounded shadow-sm text-sm transition-colors">
+              Submit
+            </button>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="md:hidden text-xs">Time: {formatTimeMinutes(timeLeft)}</div>
-          <button onClick={() => setShowSettings(true)} className={`flex items-center gap-2 px-3 py-1 rounded transition-colors text-xs sm:text-sm ${showSettings ? 'bg-white text-black' : 'bg-gray-800 hover:bg-gray-700'}`}>
-            <Settings size={16} /> <span className="hidden sm:inline">Settings</span>
-          </button>
+
+        {/* Main Split Container */}
+        <div className="flex-grow flex flex-col p-2 gap-2 max-w-[1600px] mx-auto w-full h-[calc(100vh-64px)]">
+
+          {/* Top: Question Area */}
+          <div className="flex-1 bg-white border border-gray-400 rounded-sm shadow-sm flex flex-col min-h-0">
+            <div className="bg-[#f0f0f0] px-3 py-1.5 border-b border-gray-300 text-sm font-bold text-gray-700 flex justify-between">
+              <span>Original Text</span>
+              <span className="text-xs font-normal text-gray-500">Scroll to view more</span>
+            </div>
+            <div
+              ref={textContainerRef}
+              className={`flex-grow overflow-y-auto p-4 leading-[2rem] select-none text-gray-800 ${getFontSizeClass()} ${settings.fontFamily === 'mangal' ? 'font-mangal' : 'font-mono'}`}
+            >
+              {renderStandardText()}
+            </div>
+          </div>
+
+          {/* Resize Handle / Separator (Visual Only) */}
+          <div className="h-1 bg-gray-300 rounded-full mx-10"></div>
+
+          {/* Bottom: Answer Area */}
+          <div className="flex-1 bg-white border border-gray-400 rounded-sm shadow-sm flex flex-col min-h-0">
+            <div className="bg-[#f0f0f0] px-3 py-1.5 border-b border-gray-300 text-sm font-bold text-gray-700">
+              Type Here
+            </div>
+            <textarea
+              ref={inputRef}
+              value={inputText}
+              onChange={handleInput}
+              onPaste={handlePaste}
+              className={`flex-grow w-full p-4 resize-none focus:outline-none focus:bg-[#fcffff] transition-colors ${getFontSizeClass()} ${settings.fontFamily === 'mangal' ? 'font-mangal' : 'font-mono'}`}
+              spellCheck={false}
+            />
+          </div>
+
+          {/* Footer Info */}
+          <div className="shrink-0 flex justify-between items-center text-xs text-gray-500 px-2 py-1">
+            <div>
+              Words: {keystrokes} | WPM: {Math.round((keystrokes / 5) / ((getTotalDuration() - timeLeft) / 60) || 0)}
+            </div>
+            <div className="flex gap-2">
+              <span>Keyboard: {settings.layout.toUpperCase()}</span>
+              <span>|</span>
+              <span>{settings.highlight ? 'Highlight: ON' : 'Highlight: OFF'}</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="w-full bg-gray-200 h-1 shrink-0">
-        <div className="bg-brand-purple h-1 transition-all duration-300 ease-out" style={{ width: `${progressPercentage}%` }}></div>
-      </div>
-      <div className="flex-grow relative bg-[#f3f4f6] p-4 flex flex-col min-h-0">
+
+        {/* Modals */}
         {showSettings && (
           <>
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-opacity" onClick={() => setShowSettings(false)} />
-            <div className="fixed inset-y-0 right-0 z-50 w-80 bg-white shadow-2xl border-l border-gray-200 transform transition-transform duration-300 ease-in-out flex flex-col animate-in slide-in-from-right">
-              <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2"><Settings size={18} /> Settings</h3>
-                <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 hover:text-black transition-colors"><X size={20} /></button>
+            <div className="fixed inset-0 bg-black/50 z-[60]" onClick={() => setShowSettings(false)}></div>
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-2xl z-[70] w-96 p-6 animate-in zoom-in-95">
+              <div className="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 className="font-bold text-lg">Exam Settings</h3>
+                <button onClick={() => setShowSettings(false)}><X size={20} /></button>
               </div>
-              <div className="flex-grow overflow-y-auto p-4 space-y-2">
-                {/* Appearance & Layout Section */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => setOpenSection(openSection === 'appearance' ? null : 'appearance')}
-                    className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-2 font-bold text-gray-800">
-                      <Layout size={18} /> Appearance & Layout
-                    </div>
-                    <ChevronDown size={16} className={`transition-transform duration-300 ${openSection === 'appearance' ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${openSection === 'appearance' ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="p-4 bg-white border-t border-gray-100 space-y-4">
-                      <div>
-                        <label className="text-xs font-bold text-gray-700 block mb-2">Font Size ({settings.fontSize} pt)</label>
-                        <div className="flex gap-2">
-                          <button onClick={() => setSettings(s => ({ ...s, fontSize: Math.max(14, s.fontSize - 2) }))} className="px-4 py-2 border border-gray-300 rounded font-bold hover:bg-gray-50 text-gray-700">A-</button>
-                          <button onClick={() => setSettings(s => ({ ...s, fontSize: Math.min(32, s.fontSize + 2) }))} className="px-4 py-2 border border-gray-300 rounded font-bold hover:bg-gray-50 text-gray-700">A+</button>
-                        </div>
-                      </div>
-                    </div>
+              {/* Settings Content reused from before, simplified */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="font-medium">Font Size</label>
+                  <div className="flex border rounded">
+                    <button onClick={() => setSettings(s => ({ ...s, fontSize: Math.max(14, s.fontSize - 2) }))} className="px-3 py-1 bg-gray-100 hover:bg-gray-200">-</button>
+                    <span className="px-3 py-1 font-bold">{settings.fontSize}</span>
+                    <button onClick={() => setSettings(s => ({ ...s, fontSize: Math.min(32, s.fontSize + 2) }))} className="px-3 py-1 bg-gray-100 hover:bg-gray-200">+</button>
                   </div>
                 </div>
-
-                {/* Typing Behavior Section */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="flex items-center justify-between">
+                  <label className="font-medium">Highlight Text</label>
                   <button
-                    onClick={() => setOpenSection(openSection === 'behavior' ? null : 'behavior')}
-                    className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                    onClick={() => setSettings(s => ({ ...s, highlight: !s.highlight }))}
+                    className={`w-10 h-5 rounded-full relative transition-colors ${settings.highlight ? 'bg-blue-600' : 'bg-gray-300'}`}
                   >
-                    <div className="flex items-center gap-2 font-bold text-gray-800">
-                      <Type size={18} /> Typing Behavior
-                    </div>
-                    <ChevronDown size={16} className={`transition-transform duration-300 ${openSection === 'behavior' ? 'rotate-180' : ''}`} />
+                    <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-all ${settings.highlight ? 'translate-x-5' : ''}`}></div>
                   </button>
-
-                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${openSection === 'behavior' ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="p-4 bg-white border-t border-gray-100 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm text-gray-700">Backspace On</label>
-                        <button
-                          onClick={() => setSettings(s => ({ ...s, backspace: s.backspace === 'on' ? 'off' : 'on' }))}
-                          className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-purple ${settings.backspace === 'on' ? 'bg-blue-600' : 'bg-gray-300'}`}
-                        >
-                          <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${settings.backspace === 'on' ? 'translate-x-6' : ''}`}></div>
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm text-gray-700">Limited Backspace Off</label>
-                        <button
-                          onClick={() => setSettings(s => ({ ...s, backspace: s.backspace === 'limited' ? 'off' : 'limited' }))}
-                          className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-purple ${settings.backspace === 'limited' ? 'bg-blue-600' : 'bg-gray-300'}`}
-                        >
-                          <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${settings.backspace === 'limited' ? 'translate-x-6' : ''}`}></div>
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm text-gray-700">Highlight Text</label>
-                        <button
-                          onClick={() => setSettings(s => ({ ...s, highlight: !s.highlight }))}
-                          className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-purple ${settings.highlight ? 'bg-blue-600' : 'bg-gray-300'}`}
-                        >
-                          <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${settings.highlight ? 'translate-x-6' : ''}`}></div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-
-                {/* Sound & View Section */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="flex items-center justify-between">
+                  <label className="font-medium">Sound</label>
                   <button
-                    onClick={() => setOpenSection(openSection === 'sound' ? null : 'sound')}
-                    className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                    onClick={() => setSettings(s => ({ ...s, sound: !s.sound }))}
+                    className={`w-10 h-5 rounded-full relative transition-colors ${settings.sound ? 'bg-blue-600' : 'bg-gray-300'}`}
                   >
-                    <div className="flex items-center justify-between gap-2 font-bold text-gray-800">
-                      <Volume2 size={18} /> Sound & View
-                    </div>
-                    <ChevronDown size={16} className={`transition-transform duration-300 ${openSection === 'sound' ? 'rotate-180' : ''}`} />
+                    <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-all ${settings.sound ? 'translate-x-5' : ''}`}></div>
                   </button>
-
-                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${openSection === 'sound' ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="p-4 bg-white border-t border-gray-100 space-y-4">
-                      <button
-                        onClick={() => {
-                          const audio = new Audio('/typing-sound.mp3');
-                          audio.play().catch(e => console.error("Audio error:", e));
-                        }}
-                        className="w-full bg-[#2E8B8B] hover:bg-[#257575] text-white py-2 rounded flex items-center justify-center gap-2 font-bold transition-colors"
-                      >
-                        <Volume2 size={18} /> Play Typing Sound
-                      </button>
-
-                      <button
-                        onClick={() => document.documentElement.requestFullscreen().catch(() => { })}
-                        className="w-full border border-[#2E8B8B] text-[#2E8B8B] hover:bg-[#2E8B8B] hover:text-white py-2 rounded flex items-center justify-center gap-2 font-bold transition-all"
-                      >
-                        <Maximize size={18} /> Enter Fullscreen
-                      </button>
-
-                      <div className="flex items-center justify-between pt-2">
-                        <span className="text-sm font-medium text-gray-600">Enable Typing Sound</span>
-                        <button
-                          onClick={() => setSettings(s => ({ ...s, sound: !s.sound }))}
-                          className={`w-10 h-5 rounded-full transition-colors relative ${settings.sound ? 'bg-[#2E8B8B]' : 'bg-gray-300'}`}
-                        >
-                          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${settings.sound ? 'translate-x-5' : ''}`}></div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-
               </div>
             </div>
           </>
         )}
-        <div className="flex-grow flex flex-col gap-3 h-full max-w-6xl mx-auto w-full">
-          <div className={`shrink-0 px-4 py-2 text-sm font-medium flex flex-wrap gap-4 items-center justify-between shadow-sm transition-colors ${isTcs ? 'bg-[#e0e0e0] text-black border border-gray-400 rounded-none' : 'bg-[#007bff] text-white rounded-sm'
-            }`}>
-            <div className="flex gap-4 items-center text-xs sm:text-sm">
-              <span>Layout: {settings.layout.toUpperCase()}</span>
-              <span className="hidden sm:inline">|</span>
-              <span>Lang: {settings.language === 'hindi' ? 'Hindi' : 'English'}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <label htmlFor="difficulty-select" className="opacity-90 text-xs">Difficulty:</label>
-              <select id="difficulty-select" value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)} disabled={isActive} className={`border rounded px-2 py-0.5 text-xs focus:outline-none cursor-pointer text-black`}>
-                <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
-              </select>
-            </div>
-          </div>
-          <div ref={textContainerRef} className={`flex-grow overflow-y-auto min-h-[100px] p-4 leading-relaxed select-none ${getFontSizeClass()} ${settings.fontFamily === 'mangal' ? 'font-mangal' : 'font-mono'} transition-all ${isTcs ? 'bg-white border-2 border-[#444] rounded-none shadow-none text-black' : 'bg-white border border-gray-400 rounded shadow-inner text-gray-700'
-            }`}>
-            {settings.sonyHighlight ? renderSonyStyleText() : renderStandardText()}
-          </div>
-          <textarea ref={inputRef} value={inputText} onChange={handleInput} onPaste={handlePaste} placeholder={isActive ? "" : "Click here and start typing..."} className={`w-full shrink-0 h-24 sm:h-32 p-4 focus:outline-none resize-none transition-all ${getFontSizeClass()} ${settings.fontFamily === 'mangal' ? 'font-mangal' : 'font-mono'} ${isTcs ? 'border-2 border-[#444] rounded-none focus:ring-0 bg-[#f8f9fa]' : 'border border-blue-400 rounded focus:ring-2 focus:ring-blue-300 shadow-sm'
-            }`} spellCheck={false} />
-          <div className="flex justify-between shrink-0">
-            <Link to="/exams"><button className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded shadow-sm text-sm transition-colors">Cancel</button></Link>
-            <button onClick={finishTest} className="bg-[#007bff] hover:bg-blue-600 text-white font-bold py-2 px-6 rounded shadow-sm text-sm transition-colors">Submit</button>
-          </div>
-        </div>
+
+        {showResult && renderDashboard()}
       </div>
-    </div>
-  );
+    );
+  };
+
+  return renderTCSLayout();
 };
 
 export default TypingTest;
