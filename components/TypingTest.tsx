@@ -44,6 +44,7 @@ interface TestSettings {
   layout: 'qwerty' | 'remington' | 'inscript';
   fontFamily: 'sans' | 'mangal'; // sans for English, mangal for Hindi Mangal
   hideUserInfo: boolean;
+  showCursor: boolean;
 }
 
 interface TestResult {
@@ -203,8 +204,10 @@ const TypingTest: React.FC = () => {
     language: 'english',
     layout: 'qwerty',
     fontFamily: 'sans',
-    hideUserInfo: false
+    hideUserInfo: false,
+    showCursor: true // Default: Cursor ON
   });
+
 
   // Text source: passageContent > customTextOverride > default
   const currentText = passageContent || customTextOverride || (settings.language === 'hindi'
@@ -539,7 +542,7 @@ const TypingTest: React.FC = () => {
           colorClass = 'text-black';
         }
 
-        if (isCurrent) {
+        if (isCurrent && settings.showCursor) {
           // Minimal cursor
           cursorClass = 'border-l-2 border-black animate-pulse -ml-[1px]';
         }
@@ -547,7 +550,7 @@ const TypingTest: React.FC = () => {
         // Highlight ON: Standard Logic reuse
         // The logic above (lines 496-510) already sets green/red
         // We just need to handle the Current and Future chars here
-        if (isCurrent) {
+        if (isCurrent && settings.showCursor) {
           if (isTcs) {
             bgClass = 'bg-yellow-400';
             colorClass = 'text-black font-bold';
@@ -1042,6 +1045,7 @@ const TypingTest: React.FC = () => {
                   {[
                     { label: 'Highlight Text', key: 'highlight' as const, value: settings.highlight },
                     { label: 'Auto Scroll', key: 'autoScroll' as const, value: settings.autoScroll },
+                    { label: 'Show Cursor', key: 'showCursor' as const, value: settings.showCursor },
                     { label: 'Backspace', key: 'backspace' as const, value: settings.backspace !== 'off', action: () => setSettings(s => ({ ...s, backspace: s.backspace === 'off' ? 'on' : 'off' })) },
                     { label: 'Sound', key: 'sound' as const, value: settings.sound }
                   ].map((item, idx) => (
