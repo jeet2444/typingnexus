@@ -401,6 +401,7 @@ const ContentView: React.FC<{ exams: any[], setExams: any, rules: any[] }> = ({ 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [title, setTitle] = useState('');
   const [lang, setLang] = useState('English');
+  const [enabledLangs, setEnabledLangs] = useState<string[]>(['English']); // New State
   const [ruleId, setRuleId] = useState<number>(1);
   const [status, setStatus] = useState('Published');
   const [liveStatus, setLiveStatus] = useState<'Live' | 'Upcoming' | 'Past'>('Past');
@@ -413,7 +414,8 @@ const ContentView: React.FC<{ exams: any[], setExams: any, rules: any[] }> = ({ 
     const rule = rules.find(r => r.id === Number(ruleId));
     const examData = {
       title,
-      language: lang,
+      language: enabledLangs.length > 0 ? enabledLangs[0] : 'English', // Default for legacy
+      enabledLanguages: enabledLangs, // Save array
       ruleSet: rule?.name || "Standard",
       ruleId: Number(ruleId),
       status,
@@ -431,13 +433,14 @@ const ContentView: React.FC<{ exams: any[], setExams: any, rules: any[] }> = ({ 
       const newId = exams.length > 0 ? Math.max(...exams.map(e => e.id)) + 1 : 1;
       setExams([...exams, { id: newId, ...examData }]);
     }
-    setShowAdd(false); setEditingId(null); setTitle(''); setContent(''); setContentTitle(''); setLiveStatus('Past'); setLiveDate('');
+    setShowAdd(false); setEditingId(null); setTitle(''); setContent(''); setContentTitle(''); setLiveStatus('Past'); setLiveDate(''); setEnabledLangs(['English']);
   };
 
   const handleEdit = (exam: any) => {
     setEditingId(exam.id);
     setTitle(exam.title);
     setLang(exam.language);
+    setEnabledLangs(exam.enabledLanguages || [exam.language] || ['English']); // Load saved languages
     setRuleId(exam.ruleId);
     setStatus(exam.status);
     setLiveStatus(exam.liveStatus || 'Past');
@@ -451,7 +454,7 @@ const ContentView: React.FC<{ exams: any[], setExams: any, rules: any[] }> = ({ 
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-display font-bold">Exam Management</h2>
-        <button onClick={() => { setShowAdd(true); setEditingId(null); setContent(''); setContentTitle(''); setTitle(''); }} className="bg-brand-black text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-800">
+        <button onClick={() => { setShowAdd(true); setEditingId(null); setContent(''); setContentTitle(''); setTitle(''); setEnabledLangs(['English']); }} className="bg-brand-black text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-800">
           <Plus size={16} /> Add New Exam
         </button>
       </div>
@@ -478,10 +481,33 @@ const ContentView: React.FC<{ exams: any[], setExams: any, rules: any[] }> = ({ 
               </select>
             </div>
             <div>
-              <label className="label-sm">Default Language</label>
-              <select value={lang} onChange={e => setLang(e.target.value)} className="input-field bg-gray-900 border-gray-700 text-gray-200 focus:border-brand-purple">
-                <option>English</option><option>Hindi (Remington)</option><option>Hindi (Inscript)</option>
-              </select>
+              <label className="label-sm">Allowed Languages</label>
+              <div className="flex gap-4 mt-2 bg-gray-900 border border-gray-700 p-2.5 rounded text-gray-200">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 accent-brand-purple"
+                    checked={enabledLangs.includes('English')}
+                    onChange={e => {
+                      if (e.target.checked) setEnabledLangs([...enabledLangs, 'English']);
+                      else setEnabledLangs(enabledLangs.filter(l => l !== 'English'));
+                    }}
+                  />
+                  English
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 accent-brand-purple"
+                    checked={enabledLangs.includes('Hindi')}
+                    onChange={e => {
+                      if (e.target.checked) setEnabledLangs([...enabledLangs, 'Hindi']);
+                      else setEnabledLangs(enabledLangs.filter(l => l !== 'Hindi'));
+                    }}
+                  />
+                  Hindi
+                </label>
+              </div>
             </div>
             <div>
               <label className="label-sm">Publish Status</label>

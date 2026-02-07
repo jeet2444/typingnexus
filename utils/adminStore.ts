@@ -44,6 +44,7 @@ export interface AdminExam {
     id: number;
     title: string;
     language: string;
+    enabledLanguages?: string[];
     difficulty: string;
     plays: number;
     ruleSet: string;
@@ -554,7 +555,7 @@ export const getAdminStore = (): AdminStore => {
             };
         }
 
-        return {
+        const combinedStore = {
             ...defaultStore,
             ...storedData,
             // Core Arrays
@@ -584,6 +585,33 @@ export const getAdminStore = (): AdminStore => {
             cptTests: storedData.cptTests || defaultStore.cptTests,
             comboPacks: storedData.comboPacks || defaultStore.comboPacks
         };
+
+        // --- INJECT VIRTUAL PASSAGES FROM EXAMS ---
+        // This ensures exams with custom content appear as selectable passages
+        if (combinedStore.exams && combinedStore.exams.length > 0) {
+            const virtualPassages: Passage[] = combinedStore.exams
+                .filter(e => e.content && e.content.trim().length > 0)
+                .map(e => ({
+                    id: -e.id, // Negative ID to distinguish from real passages
+                    title: e.contentTitle || e.title,
+                    content: e.content!,
+                    language: (e.language as any) || 'English',
+                    difficulty: 'Medium',
+                    category: e.title, // Match this with Exam Title for filtering
+                    wordCount: e.content!.split(/\s+/).length,
+                    tags: ['Exam Content'],
+                    status: 'Active',
+                    createdDate: new Date().toISOString()
+                }));
+
+            // Avoid duplicates if they were somehow saved
+            const existingIds = new Set(combinedStore.passages.map(p => p.id));
+            const newVirtuals = virtualPassages.filter(vp => !existingIds.has(vp.id));
+
+            combinedStore.passages = [...combinedStore.passages, ...newVirtuals];
+        }
+
+        return combinedStore;
     }
 
     // First time load
@@ -593,28 +621,34 @@ export const getAdminStore = (): AdminStore => {
 
 export const saveAdminStore = async (data: AdminStore) => {
     try {
-        localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(data));
+        // Clean up virtual passages before saving
+        const cleanData = {
+            ...data,
+            passages: data.passages.filter(p => p.id > 0) // Remove negative IDs
+        };
+
+        localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(cleanData));
 
         // --- Hostinger Sync (PHP Backend) ---
         // Save content (Exams, Rules, Blog, Settings, etc.) to local JSON file on the server
         // We EXCLUDE 'users' as per requirement (keep auth in cloud/local-secure)
         const hostingerPayload = {
-            settings: data.settings,
-            rules: data.rules,
-            exams: data.exams,
-            ads: data.ads,
-            coupons: data.coupons,
-            invoices: data.invoices,
-            enquiries: data.enquiries,
-            notifications: data.notifications,
-            media: data.media,
-            passages: data.passages,
-            certificateTemplates: data.certificateTemplates,
-            certificateCriteria: data.certificateCriteria,
-            achievements: data.achievements,
-            gamificationSettings: data.gamificationSettings,
-            cptTests: data.cptTests,
-            comboPacks: data.comboPacks
+            settings: cleanData.settings,
+            rules: cleanData.rules,
+            exams: cleanData.exams,
+            ads: cleanData.ads,
+            coupons: cleanData.coupons,
+            invoices: cleanData.invoices,
+            enquiries: cleanData.enquiries,
+            notifications: cleanData.notifications,
+            media: cleanData.media,
+            passages: cleanData.passages,
+            certificateTemplates: cleanData.certificateTemplates,
+            certificateCriteria: cleanData.certificateCriteria,
+            achievements: cleanData.achievements,
+            gamificationSettings: cleanData.gamificationSettings,
+            cptTests: cleanData.cptTests,
+            comboPacks: cleanData.comboPacks
         };
 
         if (data.settings) { // Simple check to ensure we have data

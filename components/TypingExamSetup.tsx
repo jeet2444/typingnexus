@@ -45,18 +45,38 @@ const TypingExamSetup: React.FC = () => {
         setSelectedPassageId(null); // Reset selection on lang/exam change
     }, [language, passages, selectedExamId, exams]);
 
+    // Effect to auto-switch language if the selected exam doesn't support the current one
+    useEffect(() => {
+        if (selectedExamId) {
+            const exam = exams.find(e => e.id === selectedExamId);
+            if (exam) {
+                const enabled = exam.enabledLanguages || (exam.language ? [exam.language] : []);
+                if (enabled.length > 0 && !enabled.includes(language)) {
+                    setLanguage(enabled[0] as any);
+                }
+            }
+        }
+    }, [selectedExamId, exams]);
+
     const handleNext = () => {
         const selectedExam = exams.find(e => e.id === selectedExamId);
         let finalPassageId = selectedPassageId;
 
         // Auto-select if no passage is picked but filtered ones exist
         if (!finalPassageId && filteredPassages.length > 0) {
+            // Pick a random passage from the filtered list (consistent for date)
             const seed = date.split('-').join('');
             const index = parseInt(seed) % filteredPassages.length;
             finalPassageId = filteredPassages[index].id;
         }
 
-        if (!finalPassageId) return;
+        if (!finalPassageId) {
+            // Fallback: If no passage found, maybe alert or just return?
+            // For now, let's try to find *any* passage in the base pool to avoid total failure
+            const fallback = passages.find(p => p.language === language);
+            if (fallback) finalPassageId = fallback.id;
+            else return;
+        }
 
         const params = new URLSearchParams({
             passageId: finalPassageId.toString(),
@@ -147,10 +167,30 @@ const TypingExamSetup: React.FC = () => {
                                     onChange={(e) => setLanguage(e.target.value as any)}
                                     className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 appearance-none font-medium text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-purple focus:border-brand-purple transition-all hover:bg-gray-800"
                                 >
-                                    <option value="English">English</option>
-                                    <option value="Hindi">Hindi</option>
+                                    {selectedExamId ? (
+                                        (() => {
+                                            const exam = exams.find(e => e.id === selectedExamId);
+                                            const enabled = exam?.enabledLanguages || (exam?.language ? [exam.language] : ['English', 'Hindi']);
+
+                                            // Ensure current language is valid, else switch
+                                            if (!enabled.includes(language) && enabled.length > 0) {
+                                                // This side-effect in render is risky but React updates often handle it. 
+                                                // Better to do in useEffect, but for display this works to restrict options.
+                                                // We will rely on the user picking a valid one, or useEffect below fixing it.
+                                            }
+
+                                            return enabled.map((lang: string) => (
+                                                <option key={lang} value={lang}>{lang}</option>
+                                            ));
+                                        })()
+                                    ) : (
+                                        <>
+                                            <option value="English">English</option>
+                                            <option value="Hindi">Hindi</option>
+                                        </>
+                                    )}
                                 </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
                             </div>
                         </div>
 
@@ -211,6 +251,19 @@ const TypingExamSetup: React.FC = () => {
                                 )}
                             </div>
                         </div>
+
+                        {/* Selected Passage Preview */}
+                        {selectedPassage && (
+                            <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-4 animate-in fade-in slide-in-from-top-2">
+                                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex justify-between">
+                                    <span>Passage Preview</span>
+                                    <span className="text-brand-purple">{selectedPassage.wordCount} words</span>
+                                </div>
+                                <p className="text-sm text-gray-300 italic line-clamp-3 leading-relaxed opacity-80">
+                                    "{selectedPassage.content.substring(0, 150)}..."
+                                </p>
+                            </div>
+                        )}
 
                         {/* Input Limit */}
                         <div className="flex items-center gap-4 group">

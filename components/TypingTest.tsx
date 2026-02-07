@@ -95,7 +95,7 @@ const TypingTest: React.FC = () => {
 
   // Load exam mode from URL params
   useEffect(() => {
-    const examId = searchParams.get('exam'); // Query param
+    const examId = searchParams.get('exam') || searchParams.get('examId'); // Query param
     const passageId = searchParams.get('passageId');
 
     if (examId) {
@@ -515,9 +515,13 @@ const TypingTest: React.FC = () => {
       let isCurrent = false;
       if (currentInputLen > (isLastWord ? wordEnd - 1 : spaceIndex)) isPast = true;
       else if (currentInputLen >= wordStart) isCurrent = true;
-      let containerClass = "inline-flex items-center px-1.5 py-1 mx-1 rounded-md transition-all duration-200 ";
+      let containerClass = "inline-flex items-center px-1 py-0.5 mx-[1px] rounded-md transition-all duration-200 ";
       if (isCurrent) {
-        containerClass += "bg-yellow-100 border-b-2 border-brand-purple ring-2 ring-yellow-200 scale-105 shadow-md ";
+        if (settings.highlight) {
+          containerClass += "bg-yellow-100 border-b-2 border-brand-purple ring-2 ring-yellow-200 scale-105 shadow-md ";
+        } else {
+          containerClass += "border-b-2 border-brand-purple "; // Minimal indication if highlight off
+        }
       } else if (isPast) {
         const typedWord = inputText.substring(wordStart, wordEnd);
         const isWordCorrect = typedWord === word;
@@ -979,6 +983,16 @@ const TypingTest: React.FC = () => {
                           className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-purple ${settings.backspace === 'limited' ? 'bg-blue-600' : 'bg-gray-300'}`}
                         >
                           <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${settings.backspace === 'limited' ? 'translate-x-6' : ''}`}></div>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm text-gray-700">Highlight Text</label>
+                        <button
+                          onClick={() => setSettings(s => ({ ...s, highlight: !s.highlight }))}
+                          className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-purple ${settings.highlight ? 'bg-blue-600' : 'bg-gray-300'}`}
+                        >
+                          <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${settings.highlight ? 'translate-x-6' : ''}`}></div>
                         </button>
                       </div>
                     </div>

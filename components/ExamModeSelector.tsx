@@ -229,6 +229,24 @@ const ExamModeSelector: React.FC<ExamModeSelectorProps> = ({ onSelectExam, curre
                                 )}
                             </div>
 
+                            <div className="mb-4">
+                                {(() => {
+                                    // Determine languages to show
+                                    const langs = (exam as any).enabledLanguages || (exam.language ? [exam.language] : ['english', 'hindi']);
+                                    const showEng = langs.some((l: string) => l.toLowerCase().includes('english'));
+                                    const showHin = langs.some((l: string) => l.toLowerCase().includes('hindi'));
+
+                                    if (showEng && showHin) {
+                                        return <span className="text-[10px] font-bold uppercase bg-gradient-to-r from-blue-900/40 to-orange-900/40 text-gray-300 border border-gray-700 px-2 py-1 rounded">ENG + HINDI</span>;
+                                    } else if (showEng) {
+                                        return <span className="text-[10px] font-bold uppercase bg-blue-900/30 text-blue-400 border border-blue-900/50 px-2 py-1 rounded">ENGLISH ONLY</span>;
+                                    } else if (showHin) {
+                                        return <span className="text-[10px] font-bold uppercase bg-orange-900/30 text-orange-400 border border-orange-900/50 px-2 py-1 rounded">HINDI ONLY</span>;
+                                    }
+                                    return null;
+                                })()}
+                            </div>
+
                             <h3 className="font-display font-bold text-lg text-gray-100 mb-6 line-clamp-2 min-h-[56px] group-hover:text-brand-purple transition-colors leading-tight">
                                 {exam.name}
                             </h3>
