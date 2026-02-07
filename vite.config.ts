@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const isAdminBuild = mode === 'admin';
 
   return {
-    base: './', // Use relative paths for universal compatibility
+    base: '/', // Absolute path is required for BrowserRouter with nested routes
     server: {
       port: 3000,
       host: '0.0.0.0',
