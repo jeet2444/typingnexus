@@ -512,21 +512,29 @@ const TypingTest: React.FC = () => {
       const isCurrent = index === inputChars.length;
       let cursorClass = '';
 
+
       // If Highlight is OFF, we override colors to be Simple Black/None
       if (!settings.highlight) {
         bgClass = 'bg-transparent';
-        colorClass = 'text-black';
+        colorClass = 'text-black'; // Default all text to black
+
+        // Ensure even past characters are black, overruling the logic above
+        if (index < inputChars.length) {
+          // Do nothing, keep it black. 
+          // Logic above sets colorClass to green/red, so we MUST override it here.
+          // Or better, wrap the initial coloring logic in `if (settings.highlight)`.
+          // But since I am editing this block, I will just force it here.
+          colorClass = 'text-black';
+        }
 
         if (isCurrent) {
           // Minimal cursor
           cursorClass = 'border-l-2 border-black animate-pulse -ml-[1px]';
-        } else if (isError) {
-          // Subtle error indication or none? "simple sa" -> maybe just text color
-          // Let's keep errors red but NO background
-          colorClass = 'text-red-600 font-bold';
         }
       } else {
-        // Highlight ON: Standard Logic
+        // Highlight ON: Standard Logic reuse
+        // The logic above (lines 496-510) already sets green/red
+        // We just need to handle the Current and Future chars here
         if (isCurrent) {
           if (isTcs) {
             bgClass = 'bg-yellow-400';
@@ -535,7 +543,7 @@ const TypingTest: React.FC = () => {
             cursorClass = 'border-l-2 border-brand-purple animate-pulse';
           }
         } else {
-          // Future chars match standard logic (gray/dark)
+          // Future text color - make it darker for TCS if not already set
           if (!inputChars[index]) {
             colorClass = 'text-gray-900';
           }
