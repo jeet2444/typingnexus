@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import VirtualKeyboard, { FINGER_MAP } from './VirtualKeyboard';
 import { KEY_DRILLS } from '../utils/practiceData';
+import { REMINGTON_DISPLAY_MAP, INSCRIPT_DISPLAY_MAP } from '../utils/keyboardMappings';
 
 // Settings Interface
 interface PracticeSettings {
@@ -17,54 +18,7 @@ interface PracticeSettings {
 }
 
 // --- HINDI MAPPING (Inscript) ---
-const INSCRIPT_DISPLAY_MAP: Record<string, { normal: string, shift?: string }> = {
-    'q': { normal: 'ौ', shift: 'औ' },
-    'w': { normal: 'ै', shift: 'ऐ' },
-    'e': { normal: 'ा', shift: 'आ' },
-    'r': { normal: 'ी', shift: 'ई' },
-    't': { normal: 'ू', shift: 'ऊ' },
-    'y': { normal: 'ब', shift: 'भ' },
-    'u': { normal: 'ह', shift: 'ङ' },
-    'i': { normal: 'ग', shift: 'घ' },
-    'o': { normal: 'द', shift: 'ध' },
-    'p': { normal: 'ज', shift: 'झ' },
-    '[': { normal: 'ड', shift: 'ढ' },
-    ']': { normal: '़', shift: 'ञ' },
-
-    'a': { normal: 'ो', shift: 'ओ' },
-    's': { normal: 'े', shift: 'ए' },
-    'd': { normal: '्', shift: 'अ' },
-    'f': { normal: 'ि', shift: 'इ' },
-    'g': { normal: 'ु', shift: 'उ' },
-    'h': { normal: 'प', shift: 'फ' },
-    'j': { normal: 'र', shift: 'र्' },
-    'k': { normal: 'क', shift: 'ख' },
-    'l': { normal: 'त', shift: 'थ' },
-    ';': { normal: 'च', shift: 'छ' },
-    "'": { normal: 'ट', shift: 'ठ' },
-
-    'z': { normal: '्र', shift: '' },
-    'x': { normal: 'ं', shift: 'ँ' },
-    'c': { normal: 'म', shift: 'ण' },
-    'v': { normal: 'न', shift: '' },
-    'b': { normal: 'व', shift: '' },
-    'n': { normal: 'ल', shift: 'ळ' },
-    'm': { normal: 'स', shift: 'श' },
-    ',': { normal: ',', shift: 'ष' },
-    '.': { normal: '.', shift: '।' },
-    '/': { normal: 'य', shift: '?' },
-
-    '1': { normal: '1', shift: 'ऍ' },
-    '2': { normal: '2', shift: 'ॅ' },
-    '3': { normal: '3', shift: '्र' },
-    '4': { normal: '4', shift: 'र्' },
-    '5': { normal: '5', shift: 'ज्ञ' },
-    '6': { normal: '6', shift: 'त्र' },
-    '7': { normal: '7', shift: 'क्ष' },
-    '8': { normal: '8', shift: 'श्र' },
-    '9': { normal: '9', shift: '(' },
-    '0': { normal: '0', shift: ')' },
-};
+// Moved to utils/keyboardMappings.ts
 
 interface DrillStats {
     wpm: number;
@@ -160,8 +114,8 @@ const KeyboardPractice: React.FC = () => {
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (isCompleted || !activeDrill) return;
 
-        // Skip modifier keys
-        if (['Control', 'Alt', 'Meta', 'CapsLock', 'Tab'].includes(e.key)) return;
+        // Skip modifier keys (CRITICAL: Skip Shift to avoid mistake count)
+        if (['Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Shift'].includes(e.key)) return;
 
         // Prevent scrolling with Space
         if (e.key === ' ') e.preventDefault();
@@ -196,20 +150,22 @@ const KeyboardPractice: React.FC = () => {
             setStartTime(currentStart);
         }
 
-        // --- Logic Update: Multi-Char Handling ---
+        // --- Multi-Char Handling & Mapping ---
 
         let typedChar = e.key;
 
-        // Hindi Mapping Logic (Only if Inscript is active layout)
-        if (activeLang === 'hindi' && layout === 'inscript' && typedChar.length === 1) {
-            // If user typed essentially "q", try to map it
+        // Hindi Mapping Logic
+        if (activeLang === 'hindi' && typedChar.length === 1) {
             const lowerKey = typedChar.toLowerCase();
-            const isShift = e.shiftKey || (typedChar !== lowerKey && typedChar.toUpperCase() === typedChar);
+            const isShift = e.shiftKey;
 
-            const map = INSCRIPT_DISPLAY_MAP[lowerKey];
-            if (map) {
-                const mappedChar = isShift ? (map.shift || map.normal) : map.normal;
-                // If mapped char is valid, use it.
+            // Select Map
+            const activeMap = layout === 'remington' ? REMINGTON_DISPLAY_MAP : INSCRIPT_DISPLAY_MAP;
+            const mapEntry = activeMap[lowerKey];
+
+            if (mapEntry) {
+                // Determine mapped char based on Shift state
+                const mappedChar = isShift ? (mapEntry.shift || mapEntry.normal) : mapEntry.normal;
                 if (mappedChar) {
                     typedChar = mappedChar;
                 }
@@ -237,7 +193,6 @@ const KeyboardPractice: React.FC = () => {
         } else {
             setMistakes(prev => prev + 1);
             if (settings.moveOnError) {
-                // If moving on error, we need to know how much to skip.
                 const nextIndex = currentIndex + 1;
                 setCurrentIndex(nextIndex);
                 if (nextIndex >= activeDrill.content.length) {
