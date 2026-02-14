@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Keyboard, Play, RefreshCw, Trophy, Lock, Star, ChevronDown, ChevronUp, ChevronRight, Languages, BookOpen, AlignLeft, Zap, Timer, Hand, Settings, Volume2, VolumeX, ArrowRight } from 'lucide-react';
 import VirtualKeyboard, { FINGER_MAP } from './VirtualKeyboard';
+import { INSCRIPT_DISPLAY_MAP, REMINGTON_DISPLAY_MAP } from '../utils/keyboardMappings';
 
 // --- DATA STRUCTURES ---
 
@@ -847,8 +848,18 @@ const TypingTutorial: React.FC = () => {
 
     const targetChar = currentLesson.content[currentIndex];
 
+    // Hindi Mapping Logic
+    let processedKey = e.key;
+    if (currentLesson.language === 'hindi' && processedKey !== ' ') {
+      const map = layout === 'remington' ? REMINGTON_DISPLAY_MAP : INSCRIPT_DISPLAY_MAP;
+      const mapping = map[processedKey.toLowerCase()];
+      if (mapping) {
+        processedKey = isShiftPressed && mapping.shift ? mapping.shift : mapping.normal;
+      }
+    }
+
     // Simple matching
-    if (e.key === targetChar) {
+    if (processedKey === targetChar) {
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
 
@@ -976,7 +987,7 @@ const TypingTutorial: React.FC = () => {
                       <div
                         key={lesson.id}
                         className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col justify-between hover:border-brand-purple hover:bg-gray-800 hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300 group cursor-pointer"
-                        onClick={() => navigate(`/learn/${lesson.id}`)}
+                        onClick={() => navigate(`/learn/${lesson.language}/${lesson.id}`)}
                       >
                         <div>
                           <div className="flex justify-between items-center mb-2">
