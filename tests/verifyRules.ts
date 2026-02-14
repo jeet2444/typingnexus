@@ -6,7 +6,8 @@ import { ExamProfile } from '../types/profile';
 const sscProfile: ExamProfile = {
     id: "ssc",
     profileName: "SSC Mock",
-    calculationParam: 'net_wpm',
+    description: "Mock profile for SSC",
+    calculationParam: 'net_wpm' as any,
     wordCalculation: '5char',
     minEligibilityType: 'none',
     languageMode: 'fixed',
@@ -43,7 +44,8 @@ const sscProfile: ExamProfile = {
 const courtProfile: ExamProfile = {
     id: "court",
     profileName: "High Court Mock",
-    calculationParam: 'gross_wpm', // Or Net? Usually errors are deducted from marks
+    description: "Mock profile for High Court",
+    calculationParam: 'gross_wpm' as any, // Or Net? Usually errors are deducted from marks
     wordCalculation: 'actual', // Space based
     minEligibilityType: 'none',
     languageMode: 'fixed',

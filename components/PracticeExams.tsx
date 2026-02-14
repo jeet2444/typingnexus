@@ -141,6 +141,12 @@ const PracticeExams: React.FC = () => {
         };
     }, []);
 
+    const filteredExamGroups = useMemo(() => {
+        return examGroups.filter(group =>
+            group.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [examGroups, searchTerm]);
+
     // --- Helpers ---
     const getProfilesInGroup = (groupName: string) => profiles.filter(p => getExamGroupName(p.name) === groupName);
 
@@ -263,8 +269,15 @@ const PracticeExams: React.FC = () => {
             examProfileId: e.examProfileId // Pass through for handleStartTyping
         }));
 
-        return [...relevantExams, ...libraryItems];
-    }, [contentLibrary, adminExams, activeTab, selectedGroupName]);
+        const filtered = [...relevantExams, ...libraryItems];
+
+        if (!searchTerm) return filtered;
+
+        return filtered.filter(item =>
+            item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.tags && item.tags.some(t => t.toLowerCase().includes(searchTerm.toLowerCase())))
+        );
+    }, [contentLibrary, adminExams, activeTab, selectedGroupName, searchTerm]);
 
     const filteredCPTTests = useMemo(() => {
         if (activeTab !== 'Excel' && activeTab !== 'Word') return [];
@@ -310,10 +323,35 @@ const PracticeExams: React.FC = () => {
                     )}
                 </div>
 
+                {/* Search Bar (Floating Style) */}
+                <div className="mb-12 relative max-w-2xl mx-auto transform hover:scale-[1.01] transition-all duration-300">
+                    <div className="absolute inset-x-0 -bottom-2 h-10 bg-brand-purple/20 blur-2xl rounded-full opacity-50"></div>
+                    <div className="relative flex items-center">
+                        <div className="absolute left-6 text-gray-400 group-focus-within:text-brand-purple transition-colors">
+                            <Search size={22} />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder={view === 'groups' ? "Search Exam Category (e.g. RSSB, SSC, AIIMS)..." : "Search Article or Topic..."}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-gray-900/60 backdrop-blur-2xl border-2 border-white/10 rounded-2xl py-5 pl-16 pr-6 text-white text-lg font-medium focus:outline-none focus:border-brand-purple/50 focus:ring-4 focus:ring-brand-purple/5 transition-all placeholder:text-gray-600 shadow-2xl"
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-6 p-1.5 bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-all"
+                            >
+                                <X size={20} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
                 {/* VIEW 1: EXAM GROUPS GRID (HIGH-PERFORMANCE TILES - 4 COLS) */}
                 {view === 'groups' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-6 duration-500">
-                        {examGroups.map(group => {
+                        {filteredExamGroups.map(group => {
                             if (!group) return null;
 
                             const profilesInGroup = getProfilesInGroup(group);
@@ -390,7 +428,7 @@ const PracticeExams: React.FC = () => {
                             );
                         })}
 
-                        {examGroups.length === 0 && (
+                        {filteredExamGroups.length === 0 && (
                             <div className="col-span-full text-center py-24 bg-gray-900/20 border-2 border-dashed border-white/5 rounded-[3rem]">
                                 <Search size={48} className="mx-auto text-gray-700 mb-6" />
                                 <div className="text-gray-500 font-bold uppercase tracking-widest text-sm">No Active Uplink Detected</div>
