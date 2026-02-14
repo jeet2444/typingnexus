@@ -4,21 +4,35 @@ DirectoryIndex dist/index.html index.php index.html
   RewriteEngine On
   RewriteBase /
 
-  # 1. Allow PHP files
+  # 1. Allow PHP files (deployment/save)
   RewriteRule \.php$ - [L]
 
-  # 2. Redirect root and index.html to dist/index.html
+  # 2. Handle admin.typingnexus.in subdomain
+  RewriteCond %{HTTP_HOST} ^admin\.typingnexus\.in$ [NC]
+  RewriteCond %{REQUEST_URI} !^/dist-admin/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^(.*)$ dist-admin/$1 [L]
+
+  # Admin SPA fallback
+  RewriteCond %{HTTP_HOST} ^admin\.typingnexus\.in$ [NC]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ dist-admin/index.html [L]
+
+  # 3. Handle main site (typingnexus.in)
+  RewriteCond %{HTTP_HOST} ^(www\.)?typingnexus\.in$ [NC]
   RewriteRule ^$ dist/index.html [L]
+  RewriteCond %{HTTP_HOST} ^(www\.)?typingnexus\.in$ [NC]
   RewriteRule ^index\.html$ dist/index.html [L]
 
-  # 3. Prevent loops for dist folder
-  RewriteRule ^dist/ - [L]
-
-  # 4. Rewrite all other requests to dist/
+  # Main site Assets & Routing
+  RewriteCond %{HTTP_HOST} ^(www\.)?typingnexus\.in$ [NC]
   RewriteCond %{REQUEST_URI} !^/dist/
+  RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^(.*)$ dist/$1 [L,QSA]
 
-  # 5. SPA Fallback
+  # Main site SPA Fallback
+  RewriteCond %{HTTP_HOST} ^(www\.)?typingnexus\.in$ [NC]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ dist/index.html [L]
