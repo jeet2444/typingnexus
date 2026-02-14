@@ -1196,20 +1196,116 @@ const TypingTest: React.FC = () => {
         ) : (
           <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Result Card — matching reference layout */}
-            <div className="bg-white text-black rounded-xl overflow-hidden shadow-2xl border border-gray-300">
-              {/* User Profile & Qualification Banner */}
-              <div className="bg-gray-100 px-8 py-4 border-b-2 border-teal-500 flex justify-between items-center">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-800">
-                    {currentUser?.name || userProfile?.name || 'Guest User'}
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {currentUser?.email || userProfile?.email || ''}
-                    {activeProfile ? ` • ${activeProfile.name}` : ''}
-                  </p>
+            <div className="bg-white text-black rounded-xl overflow-hidden shadow-2xl border border-gray-300 p-8">
+              {/* Exam Info Row (Single Row) */}
+              <div className="flex flex-wrap justify-between items-center text-sm gap-y-4 mb-8 pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-gray-800">Passage Title: </span>
+                  <span className="text-gray-500">{examTitle || 'Typing Assessment'}</span>
                 </div>
-                <div className={`text-sm font-black px-4 py-1.5 rounded-lg shadow-sm border ${activeProfile
-                  ? (calculateExamResult(activeProfile, {
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-gray-800">Time Duration: </span>
+                  <span className="text-gray-500">{(activeProfile?.durationMin || Math.ceil((getTotalDuration()) / 60))}:00 min.</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-gray-800">Time Taken: </span>
+                  <span className="text-gray-500">{testResult?.timeTaken} min.</span>
+                </div>
+              </div>
+
+              {/* Metric Cards Grid (4 Columns) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {/* 1. Total Words Typed */}
+                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Words Typed</span>
+                    <Keyboard className="text-gray-400 group-hover:text-brand-purple transition-colors" size={24} />
+                  </div>
+                  <div className="text-4xl font-black text-gray-900">{testResult?.totalWordsTyped}</div>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-brand-purple transition-colors"></div>
+                </div>
+
+                {/* 2. Total Wrong Words */}
+                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Wrong Words</span>
+                    <XCircle className="text-gray-400 group-hover:text-red-500 transition-colors" size={24} />
+                  </div>
+                  <div className="text-4xl font-black text-gray-900">{(testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0)}</div>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-red-500 transition-colors"></div>
+                </div>
+
+                {/* 3. Net Correct Words */}
+                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Net Correct Words</span>
+                    <Check className="text-gray-400 group-hover:text-green-500 transition-colors" size={24} />
+                  </div>
+                  <div className="text-4xl font-black text-gray-900">{(testResult?.totalWordsTyped || 0) - ((testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0))}</div>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-green-500 transition-colors"></div>
+                </div>
+
+                {/* 4. Marks Obtained */}
+                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Marks Obtained</span>
+                    <Award className="text-gray-400 group-hover:text-blue-500 transition-colors" size={24} />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <div className="text-4xl font-black text-gray-900">
+                      {activeProfile ? calculateExamResult(activeProfile, {
+                        totalKeystrokes: testResult?.keystrokes || 0,
+                        correctKeystrokes: (testResult?.keystrokes || 0) - ((testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0)),
+                        backspaceCount: testResult?.backspaceCount || 0,
+                        totalWordsTyped: testResult?.totalWordsTyped || 0,
+                        fullMistakes: testResult?.fullMistakes || 0,
+                        halfMistakes: testResult?.halfMistakes || 0,
+                        timeTakenSeconds: 0
+                      }).marks : '0.00'}
+                    </div>
+                    <span className="text-gray-400 font-bold">/ 50</span>
+                  </div>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-blue-500 transition-colors"></div>
+                </div>
+
+                {/* Row 2 */}
+                {/* 5. Gross Speed */}
+                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Gross Speed (wpm)</span>
+                    <Gauge className="text-gray-400 group-hover:text-amber-500 transition-colors" size={24} />
+                  </div>
+                  <div className="text-4xl font-black text-gray-900">{testResult?.grossWpm}</div>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-amber-500 transition-colors"></div>
+                </div>
+
+                {/* 6. Net Speed */}
+                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Net Speed ({activeProfile?.minEligibilityValue || 25} wpm)</span>
+                    <Zap className="text-gray-400 group-hover:text-green-600 transition-colors" size={24} />
+                  </div>
+                  <div className="text-4xl font-black text-gray-900">{testResult?.netWpm}</div>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-green-600 transition-colors"></div>
+                </div>
+
+                {/* 7. Backspace Count */}
+                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Backspace Count</span>
+                    <Delete className="text-gray-400 group-hover:text-blue-500 transition-colors" size={24} />
+                  </div>
+                  <div className="text-4xl font-black text-gray-900">{testResult?.backspaceCount}</div>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-blue-500 transition-colors"></div>
+                </div>
+
+                {/* 8. Status */}
+                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status</span>
+                    <Target className="text-gray-400 group-hover:text-purple-600 transition-colors" size={24} />
+                  </div>
+                  <div className={`text-2xl font-black mt-2 ${activeProfile && calculateExamResult(activeProfile, {
                     totalKeystrokes: testResult?.keystrokes || 0,
                     correctKeystrokes: (testResult?.keystrokes || 0) - ((testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0)),
                     backspaceCount: testResult?.backspaceCount || 0,
@@ -1217,11 +1313,8 @@ const TypingTest: React.FC = () => {
                     fullMistakes: testResult?.fullMistakes || 0,
                     halfMistakes: testResult?.halfMistakes || 0,
                     timeTakenSeconds: 0
-                  }).isQualified ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200')
-                  : (parseFloat(testResult?.accuracy || '0') >= 90 ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200')
-                  }`}>
-                  {activeProfile
-                    ? (calculateExamResult(activeProfile, {
+                  }).isQualified ? 'text-green-600' : 'text-red-500'}`}>
+                    {activeProfile ? (calculateExamResult(activeProfile, {
                       totalKeystrokes: testResult?.keystrokes || 0,
                       correctKeystrokes: (testResult?.keystrokes || 0) - ((testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0)),
                       backspaceCount: testResult?.backspaceCount || 0,
@@ -1229,106 +1322,45 @@ const TypingTest: React.FC = () => {
                       fullMistakes: testResult?.fullMistakes || 0,
                       halfMistakes: testResult?.halfMistakes || 0,
                       timeTakenSeconds: 0
-                    }).isQualified ? '✓ QUALIFIED' : '✗ NOT QUALIFIED')
-                    : (parseFloat(testResult?.accuracy || '0') >= 90 ? '✓ PASSED' : '✗ NEEDS IMPROVEMENT')
-                  }
+                    }).isQualified ? 'Qualified' : 'Unqualified') : 'Completed'}
+                  </div>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-purple-600 transition-colors"></div>
                 </div>
               </div>
 
-              {/* Header Info Row 1 */}
-              <div className="px-8 pt-6 pb-3 grid grid-cols-3 gap-4 text-sm border-b border-gray-200">
-                <div>
-                  <span className="font-bold text-gray-800">Exam Title: </span>
-                  <span className="text-gray-600">{examTitle || 'Typing Assessment'}</span>
-                </div>
-                <div>
-                  <span className="font-bold text-gray-800">Total Key Depression: </span>
-                  <span className="text-gray-600 font-semibold">{testResult?.keystrokes}</span>
-                </div>
-                <div>
-                  <span className="font-bold text-gray-800">Typing Date: </span>
-                  <span className="text-gray-600">{new Date().toLocaleDateString('en-GB').replace(/\//g, '/')}</span>
-                </div>
-              </div>
-
-              {/* Header Info Row 2 */}
-              <div className="px-8 pt-3 pb-5 grid grid-cols-3 gap-4 text-sm border-b border-gray-200">
-                <div>
-                  <span className="font-bold text-gray-800">Passage Title: </span>
-                  <span className="text-gray-600 truncate">{examTitle || 'Typing Test Passage'}</span>
-                </div>
-                <div>
-                  <span className="font-bold text-gray-800">Time Duration: </span>
-                  <span className="text-gray-600">{activeProfile?.durationMin || Math.ceil((getTotalDuration()) / 60)} min.</span>
-                </div>
-                <div>
-                  <span className="font-bold text-gray-800">Time Taken: </span>
-                  <span className="text-gray-600">{testResult?.timeTaken} min.</span>
+              {/* Status Explanation Alert Box */}
+              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex items-center gap-3 mb-4">
+                <Target size={20} className="text-blue-500" />
+                <div className="text-sm text-blue-800 font-medium">
+                  {activeProfile ? (
+                    (() => {
+                      const res = calculateExamResult(activeProfile, {
+                        totalKeystrokes: testResult?.keystrokes || 0,
+                        correctKeystrokes: (testResult?.keystrokes || 0) - ((testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0)),
+                        backspaceCount: testResult?.backspaceCount || 0,
+                        totalWordsTyped: testResult?.totalWordsTyped || 0,
+                        fullMistakes: testResult?.fullMistakes || 0,
+                        halfMistakes: testResult?.halfMistakes || 0,
+                        timeTakenSeconds: 0
+                      });
+                      if (res.isQualified) {
+                        return `Congratulations! Your Net Speed of ${res.netWPM} wpm meets the minimum requirement of ${activeProfile.minEligibilityValue || 25} wpm. Accuracy: ${res.accuracy}%`;
+                      } else {
+                        return `Net Speed is less than the min. required speed of ${activeProfile.minEligibilityValue || 25} wpm. And Calculation of Marks = 50 - ( ${res.totalErrors} * ${activeProfile.deductionValue || 0.1} ).`;
+                      }
+                    })()
+                  ) : "Test completed successfully. Detailed analysis below."}
                 </div>
               </div>
 
-              {/* Metric Cards — Row 1 */}
-              <div className="px-8 pt-6 grid grid-cols-4 gap-4">
-                <div className="border border-gray-300 rounded-lg p-4 flex items-start justify-between">
-                  <div>
-                    <div className="text-xs text-gray-500 font-semibold mb-2">Key Depressions Typed</div>
-                    <div className="text-2xl font-black text-gray-800">{testResult?.keystrokes}</div>
-                  </div>
-                  <Keyboard size={22} className="text-gray-400 mt-1" />
-                </div>
-                <div className="border border-gray-300 rounded-lg p-4 flex items-start justify-between">
-                  <div>
-                    <div className="text-xs text-gray-500 font-semibold mb-2">Full Mistakes (key strokes)</div>
-                    <div className="text-2xl font-black text-gray-800">{testResult?.fullMistakes}</div>
-                  </div>
-                  <XCircle size={22} className="text-gray-400 mt-1" />
-                </div>
-                <div className="border border-gray-300 rounded-lg p-4 flex items-start justify-between">
-                  <div>
-                    <div className="text-xs text-gray-500 font-semibold mb-2">Half Mistakes (key strokes)</div>
-                    <div className="text-2xl font-black text-gray-800">{testResult?.halfMistakes}</div>
-                  </div>
-                  <Type size={22} className="text-gray-400 mt-1" />
-                </div>
-                <div className="border border-gray-300 rounded-lg p-4 flex items-start justify-between">
-                  <div>
-                    <div className="text-xs text-gray-500 font-semibold mb-2">Error %</div>
-                    <div className="text-2xl font-black text-gray-800">{(100 - parseFloat(testResult?.accuracy || '100')).toFixed(1)}</div>
-                  </div>
-                  <Percent size={22} className="text-gray-400 mt-1" />
-                </div>
-              </div>
-
-              {/* Metric Cards — Row 2 */}
-              <div className="px-8 pt-4 pb-6 grid grid-cols-4 gap-4">
-                <div className="border border-gray-300 rounded-lg p-4 flex items-start justify-between">
-                  <div>
-                    <div className="text-xs text-gray-500 font-semibold mb-2">Gross Speed (wpm)</div>
-                    <div className="text-2xl font-black text-gray-800">{testResult?.grossWpm}</div>
-                  </div>
-                  <Gauge size={22} className="text-gray-400 mt-1" />
-                </div>
-                <div className="border border-gray-300 rounded-lg p-4 flex items-start justify-between">
-                  <div>
-                    <div className="text-xs text-gray-500 font-semibold mb-2">Net Speed (wpm)</div>
-                    <div className="text-2xl font-black text-gray-800">{testResult?.netWpm}</div>
-                  </div>
-                  <Gauge size={22} className="text-gray-400 mt-1" />
-                </div>
-                <div className="border border-gray-300 rounded-lg p-4 flex items-start justify-between">
-                  <div>
-                    <div className="text-xs text-gray-500 font-semibold mb-2">Words Typed</div>
-                    <div className="text-2xl font-black text-gray-800">{testResult?.totalWordsTyped}</div>
-                  </div>
-                  <Target size={22} className="text-gray-400 mt-1" />
-                </div>
-                <div className="border border-gray-300 rounded-lg p-4 flex items-start justify-between">
-                  <div>
-                    <div className="text-xs text-gray-500 font-semibold mb-2">Backspace Count</div>
-                    <div className="text-2xl font-black text-gray-800">{testResult?.backspaceCount}</div>
-                  </div>
-                  <Delete size={22} className="text-gray-400 mt-1" />
-                </div>
+              <div className="flex items-center gap-3 mt-8">
+                <span className="text-xs font-black text-gray-500 uppercase tracking-widest">Detailed Comparision</span>
+                <button
+                  onClick={() => setShowDetailedComparison(!showDetailedComparison)}
+                  className={`w-12 h-6 rounded-full transition-all relative ${showDetailedComparison ? 'bg-blue-600 shadow-md shadow-blue-200' : 'bg-gray-300'}`}
+                >
+                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${showDetailedComparison ? 'translate-x-7' : 'translate-x-1'}`} />
+                </button>
               </div>
             </div>
 
@@ -1343,58 +1375,46 @@ const TypingTest: React.FC = () => {
               </button>
             </div>
 
-            {/* Paragraph Comparison View - Alignment Aware */}
+            {/* Side-by-Side Comparison Grid */}
             {showDetailedComparison && (
-              <div className="animate-in fade-in zoom-in-95 duration-300">
-                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
-                  <div className="flex items-center justify-between mb-4 px-2">
-                    <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest">Detailed Analysis (Alignment Mode)</h4>
-                    <div className="flex gap-4 text-[10px] font-bold">
-                      <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-500"></span> Correct</div>
-                      <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500"></span> Wrong</div>
-                      <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400"></span> Missed</div>
-                      <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500"></span> Extra</div>
+              <div className="animate-in fade-in zoom-in-95 duration-500">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Original Passage */}
+                  <div className="bg-white border-2 border-gray-100 rounded-2xl shadow-xl overflow-hidden">
+                    <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                      <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest">Original Passage</h4>
+                      <Clock size={16} className="text-gray-300" />
+                    </div>
+                    <div className="p-8 bg-white text-gray-800 leading-[2.5] font-mono text-base h-[500px] overflow-y-auto custom-scrollbar">
+                      {calculateDetailedStats().alignment.map((item, idx) => (
+                        <span
+                          key={idx}
+                          className={`mr-2.5 px-0.5 rounded ${item.status === 'mismatch' ? 'bg-red-100 text-red-600 line-through decoration-2' :
+                            item.status === 'missed' ? 'bg-amber-100 text-amber-700' : ''}`}
+                        >
+                          {item.original || ''}
+                        </span>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="p-6 bg-gray-50/50 rounded-xl border border-gray-100 text-gray-800 leading-relaxed font-mono text-sm max-h-[500px] overflow-y-auto custom-scrollbar">
-                    <div className="flex flex-wrap gap-y-2">
-                      {calculateDetailedStats().alignment.map((item, idx) => {
-                        if (item.status === 'match') {
-                          return <span key={idx} className="text-teal-700 mr-2">{item.typed}</span>;
-                        }
-                        if (item.status === 'mismatch') {
-                          return (
-                            <span key={idx} className="relative group mr-2">
-                              <span className="text-red-600 bg-red-100 px-1 rounded border-b-2 border-red-300 cursor-help">{item.typed}</span>
-                              <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                                Original: {item.original}
-                              </span>
-                            </span>
-                          );
-                        }
-                        if (item.status === 'missed') {
-                          return (
-                            <span key={idx} className="relative group mr-2">
-                              <span className="text-amber-600 bg-amber-50 px-1 rounded border-b-2 border-amber-300 cursor-help opacity-40">[{item.original}]</span>
-                              <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                                Missed Word
-                              </span>
-                            </span>
-                          );
-                        }
-                        if (item.status === 'extra') {
-                          return (
-                            <span key={idx} className="relative group mr-2">
-                              <span className="text-purple-600 bg-purple-50 px-1 rounded border-b-2 border-purple-300 cursor-helpDecoration">{item.typed}</span>
-                              <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                                Extra Word
-                              </span>
-                            </span>
-                          );
-                        }
-                        return null;
-                      })}
+                  {/* Typed Passage */}
+                  <div className="bg-white border-2 border-gray-100 rounded-2xl shadow-xl overflow-hidden">
+                    <div className="bg-teal-50 px-6 py-4 border-b border-teal-100 flex justify-between items-center">
+                      <h4 className="text-xs font-black text-teal-600 uppercase tracking-widest">Typed Passage</h4>
+                      <Target size={16} className="text-teal-300" />
+                    </div>
+                    <div className="p-8 bg-teal-50/10 text-gray-800 leading-[2.5] font-mono text-base h-[500px] overflow-y-auto custom-scrollbar">
+                      {calculateDetailedStats().alignment.map((item, idx) => (
+                        <span
+                          key={idx}
+                          className={`mr-2.5 px-0.5 rounded ${item.status === 'match' ? 'text-teal-700' :
+                            item.status === 'mismatch' ? 'bg-red-500 text-white shadow-sm' :
+                              item.status === 'extra' ? 'bg-purple-100 text-purple-700' : ''}`}
+                        >
+                          {item.typed || ''}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
