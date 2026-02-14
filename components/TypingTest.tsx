@@ -446,7 +446,8 @@ const TypingTest: React.FC = () => {
 
   useEffect(() => {
     if (backgroundAudioRef.current) {
-      const shouldPlay = (isActive || settings.backgroundSound) && !isPaused && !showResult;
+      // Strictly respect the backgroundSound toggle. If it's off, no sound.
+      const shouldPlay = settings.backgroundSound && !isPaused && !showResult;
       if (shouldPlay) {
         backgroundAudioRef.current.play().catch(e => console.warn("Atmos audio play failed", e));
       } else {
