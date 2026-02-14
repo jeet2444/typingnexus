@@ -1,36 +1,3 @@
-DirectoryIndex dist/index.html index.php index.html
-
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-
-  # 1. Allow PHP files (deployment/save)
-  RewriteRule \.php$ - [L]
-
-  # 2. Handle /admin path (Route to dist-admin)
-  RewriteCond %{REQUEST_URI} ^/admin [NC]
-  RewriteCond %{REQUEST_URI} !^/dist-admin/
-  RewriteRule ^admin(.*)$ dist-admin/$1 [L]
-
-  # Admin SPA fallback (inside /admin)
-  RewriteCond %{REQUEST_URI} ^/admin [NC]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^admin.*$ dist-admin/index.html [L]
-
-  # 3. Handle main site (typingnexus.in)
-  RewriteCond %{HTTP_HOST} ^(www\.)?typingnexus\.in$ [NC]
-  RewriteCond %{REQUEST_URI} !^/admin [NC]
-  RewriteRule ^$ dist/index.html [L]
-  
-  RewriteCond %{HTTP_HOST} ^(www\.)?typingnexus\.in$ [NC]
-  RewriteCond %{REQUEST_URI} !^/admin [NC]
-  RewriteRule ^index\.html$ dist/index.html [L]
-
-  # Main site Assets & Routing
-  RewriteCond %{HTTP_HOST} ^(www\.)?typingnexus\.in$ [NC]
-  RewriteCond %{REQUEST_URI} !^/dist/
-  RewriteCond %{REQUEST_URI} !^/admin [NC]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^(.*)$ dist/$1 [L,QSA]
 
