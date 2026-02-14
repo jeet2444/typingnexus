@@ -2,22 +2,27 @@
   RewriteEngine On
   RewriteBase /
 
-  # 1. Direct access to existing files/folders in the root
+  # 1. Allow direct access to PHP and JSON files anywhere
+  # This ensures deploy.php, save_settings.php and data/*.json are accessible
+  RewriteRule \.(php|json)$ - [L]
+
+  # 2. Direct access to existing files/folders in the root
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # 2. Redirect root to dist/index.html
-  RewriteRule ^$ dist/index.html [L]
-
   # 3. Handle assets and existing files inside dist folder
-  # Checks if the requested path exists inside the dist directory
+  # If the request matches a file in dist, serve it from dist
   RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f [OR]
   RewriteCond %{DOCUMENT_ROOT}/dist/$1 -d
   RewriteRule ^(.*)$ dist/$1 [L]
 
-  # 4. Single Page Application (SPA) routing
+  # 4. Redirect root to dist/index.html
+  RewriteRule ^$ dist/index.html [L]
+
+  # 5. Single Page Application (SPA) routing
   # Send all other requests to dist/index.html so React Router can handle them
+  # Exclude actual files and directories
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . dist/index.html [L]
