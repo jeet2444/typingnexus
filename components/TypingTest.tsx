@@ -53,6 +53,7 @@ interface TestSettings {
   showCursor: boolean;
   security?: { preventCopyPaste: boolean; preventRightClick: boolean; singleSession: boolean };
   errorMethod?: string; // Updated to match profiles
+  spellcheck: boolean;
 }
 
 interface TestResult {
@@ -134,7 +135,8 @@ const TypingTest: React.FC = () => {
     fontFamily: 'sans',
     hideUserInfo: false,
     showCursor: true,
-    security: { preventCopyPaste: false, preventRightClick: false, singleSession: false }
+    security: { preventCopyPaste: false, preventRightClick: false, singleSession: false },
+    spellcheck: false
   });
 
   // Load exam mode from URL params
@@ -733,6 +735,7 @@ const TypingTest: React.FC = () => {
                   setTimeout(() => setPasteWarning(false), 2000);
                 }
               }}
+              spellCheck={settings.spellcheck}
               autoFocus
             />
 
@@ -920,15 +923,26 @@ const TypingTest: React.FC = () => {
                               </button>
                             </div>
                           </div>
-                          {/* Extra Space */}
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-700">Extra Space {settings.extraSpace ? 'On' : 'Off'}</span>
-                            <button
-                              onClick={() => setSettings(s => ({ ...s, extraSpace: !s.extraSpace }))}
-                              className={`w-11 h-6 rounded-full transition-colors relative ${settings.extraSpace ? 'bg-blue-500' : 'bg-gray-300'}`}
-                            >
-                              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.extraSpace ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                            </button>
+                          {/* Extra Space & Spellcheck */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-700">Extra Space {settings.extraSpace ? 'On' : 'Off'}</span>
+                              <button
+                                onClick={() => setSettings(s => ({ ...s, extraSpace: !s.extraSpace }))}
+                                className={`w-11 h-6 rounded-full transition-colors relative ${settings.extraSpace ? 'bg-blue-500' : 'bg-gray-300'}`}
+                              >
+                                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.extraSpace ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                              </button>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-700">Spellcheck {settings.spellcheck ? 'On' : 'Off'}</span>
+                              <button
+                                onClick={() => setSettings(s => ({ ...s, spellcheck: !s.spellcheck }))}
+                                className={`w-11 h-6 rounded-full transition-colors relative ${settings.spellcheck ? 'bg-blue-500' : 'bg-gray-300'}`}
+                              >
+                                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.spellcheck ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}
