@@ -1,10 +1,18 @@
-  RewriteCond %{REQUEST_FILENAME} !-f
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Force serve files from dist/ if they exist
+  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f
   RewriteRule ^(.*)$ dist/$1 [L,QSA]
 
-  # Main site SPA Fallback
-  RewriteCond %{HTTP_HOST} ^(www\.)?typingnexus\.in$ [NC]
-  RewriteCond %{REQUEST_URI} !^/admin [NC]
+  # 2. Support /admin routing (if needed separately)
+  RewriteCond %{REQUEST_URI} ^/admin [NC]
+  RewriteRule ^ admin/index.html [L]
+
+  # 3. SPA Fallback: Everything else to dist/index.html
+  # Skip if it's an existing file or directory NOT in dist
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^ dist/index.html [L]
+  RewriteRule . dist/index.html [L]
 </IfModule>
