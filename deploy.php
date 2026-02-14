@@ -27,11 +27,17 @@ if (file_exists('.git')) {
     echo "Git repository detected.\n";
 
     // 3. Attempt Git Pull
-    // Note: This requires 'git' to be in the PATH and shell_exec to be enabled.
     if (function_exists('shell_exec')) {
+        echo "Updating known_hosts to trust github.com...\n";
+        shell_exec('mkdir -p ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts 2>&1');
+
+        echo "Current Remotes:\n" . shell_exec('git remote -v 2>&1') . "\n";
+
         echo "Attempting git pull...\n";
-        $output = shell_exec('git pull 2>&1');
+        $output = shell_exec('git pull origin main 2>&1');
         echo "Output:\n" . ($output ?: "No output (maybe git pull failed silently)") . "\n";
+
+        echo "\nLast Commit:\n" . shell_exec('git log -1 --pretty=format:"%h - %s (%cr)" 2>&1') . "\n";
     } else {
         echo "Error: shell_exec is disabled on this server. Please use Hostinger's built-in Git 'Auto Deployment' feature.\n";
     }
