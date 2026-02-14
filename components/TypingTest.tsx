@@ -52,8 +52,10 @@ interface TestSettings {
   hideUserInfo: boolean;
   showCursor: boolean;
   security?: { preventCopyPaste: boolean; preventRightClick: boolean; singleSession: boolean };
-  errorMethod?: string; // Updated to match profiles
   spellcheck: boolean;
+  compulsoryCorrect: boolean;
+  autoStart: boolean;
+  backgroundSound: boolean;
 }
 
 interface TestResult {
@@ -136,7 +138,10 @@ const TypingTest: React.FC = () => {
     hideUserInfo: false,
     showCursor: true,
     security: { preventCopyPaste: false, preventRightClick: false, singleSession: false },
-    spellcheck: false
+    spellcheck: false,
+    compulsoryCorrect: false,
+    autoStart: false,
+    backgroundSound: false
   });
 
   // Load exam mode from URL params
@@ -379,6 +384,16 @@ const TypingTest: React.FC = () => {
         }, 1000);
       }
       setKeyDepressions(prev => prev + 1);
+
+      // compulsoryCorrect Logic: only proceed if correct
+      if (settings.compulsoryCorrect) {
+        const currentRefChar = currentText[inputText.length];
+        if (actualChar !== currentRefChar) {
+          playSound('error');
+          return;
+        }
+      }
+
       playSound('correct');
 
       // Set cursor position after update
@@ -425,13 +440,14 @@ const TypingTest: React.FC = () => {
 
   useEffect(() => {
     if (backgroundAudioRef.current) {
-      if (isActive && !isPaused && !showResult) {
+      const shouldPlay = (isActive || settings.backgroundSound) && !isPaused && !showResult;
+      if (shouldPlay) {
         backgroundAudioRef.current.play().catch(e => console.warn("Atmos audio play failed", e));
       } else {
         backgroundAudioRef.current.pause();
       }
     }
-  }, [isActive, isPaused, showResult]);
+  }, [isActive, isPaused, showResult, settings.backgroundSound]);
 
   const getTotalDuration = () => {
     return settings.customDuration !== null ? settings.customDuration : DIFFICULTY_CONFIG[difficulty].time;
@@ -512,8 +528,21 @@ const TypingTest: React.FC = () => {
     setRemedialDrill(null);
     setCustomTextOverride(null);
     setUserProfile(getUserProfile());
-    if (timerRef.current) clearInterval(timerRef.current);
     if (inputRef.current) inputRef.current.focus();
+
+    // Auto Start Logic
+    if (settings.autoStart) {
+      setIsActive(true);
+      timerRef.current = window.setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            finishTest();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
   };
 
   const startRemedialDrill = () => {
@@ -941,6 +970,48 @@ const TypingTest: React.FC = () => {
                                 className={`w-11 h-6 rounded-full transition-colors relative ${settings.spellcheck ? 'bg-blue-500' : 'bg-gray-300'}`}
                               >
                                 <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.spellcheck ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Professional Mode Section from Screenshot */}
+                          <div className="pt-4 border-t border-gray-100 space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex flex-col">
+                                <span className="text-sm text-gray-700 font-semibold">Type correct spelling compulsory</span>
+                                <span className="text-[10px] text-gray-400">Only correct key strokes will be allowed</span>
+                              </div>
+                              <button
+                                onClick={() => setSettings(s => ({ ...s, compulsoryCorrect: !s.compulsoryCorrect }))}
+                                className={`w-11 h-6 rounded-full transition-colors relative ${settings.compulsoryCorrect ? 'bg-blue-500' : 'bg-gray-300'}`}
+                              >
+                                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.compulsoryCorrect ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                              </button>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex flex-col">
+                                <span className="text-sm text-gray-700 font-semibold">Background Typing Sound</span>
+                                <span className="text-[10px] text-gray-400">Play background typing sounds just like in exam</span>
+                              </div>
+                              <button
+                                onClick={() => setSettings(s => ({ ...s, backgroundSound: !s.backgroundSound }))}
+                                className={`w-11 h-6 rounded-full transition-colors relative ${settings.backgroundSound ? 'bg-blue-500' : 'bg-gray-300'}`}
+                              >
+                                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.backgroundSound ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                              </button>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex flex-col">
+                                <span className="text-sm text-gray-700 font-semibold">Auto Start Timer</span>
+                                <span className="text-[10px] text-gray-400">Timer starts immediately when test opens</span>
+                              </div>
+                              <button
+                                onClick={() => setSettings(s => ({ ...s, autoStart: !s.autoStart }))}
+                                className={`w-11 h-6 rounded-full transition-colors relative ${settings.autoStart ? 'bg-blue-500' : 'bg-gray-300'}`}
+                              >
+                                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.autoStart ? 'translate-x-5' : 'translate-x-0.5'}`} />
                               </button>
                             </div>
                           </div>
