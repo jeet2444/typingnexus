@@ -30,6 +30,7 @@ const Exams: React.FC = () => {
    const [ads, setAds] = useState<any[]>([]);
    const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
    const [articles, setArticles] = useState<any[]>([]);
+   const [articleSearch, setArticleSearch] = useState("");
    const { hasPremiumAccess } = useAuth();
 
    useEffect(() => {
@@ -64,7 +65,7 @@ const Exams: React.FC = () => {
 
          // 4. Transform Profiles (New Requirements)
          const mappedProfiles = (store.examProfiles || [])
-            .filter(p => !p.profileName.match(/Excel|Word|CPT/i))
+            .filter(p => !p.profileName.match(/Excel\b|Word\b|CPT\b/i))
             .map(p => ({
                id: `profile-${p.id}`,
                title: p.profileName,
@@ -201,27 +202,44 @@ const Exams: React.FC = () => {
                   </div>
                </>
             ) : (
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
-                  {articles
-                     .filter(a => a.language.toLowerCase() === (selectedExam.language || 'English').toLowerCase())
-                     .map(article => (
-                        <div
-                           key={article.id}
-                           onClick={() => handleArticleSelect(article)}
-                           className="bg-gray-900/50 border border-gray-800 p-6 rounded-2xl hover:border-brand-purple transition-all cursor-pointer group"
-                        >
-                           <h4 className="text-lg font-bold text-white mb-2 group-hover:text-brand-purple transition-colors">{article.title}</h4>
-                           <div className="text-xs text-gray-500 flex justify-between italic">
-                              <span>Difficulty: {article.difficulty}</span>
-                              <span>Tags: {article.tags?.join(', ')}</span>
-                           </div>
-                        </div>
-                     ))}
-                  {articles.filter(a => a.language.toLowerCase() === (selectedExam.language || 'English').toLowerCase()).length === 0 && (
-                     <div className="col-span-full py-20 text-center text-gray-500 border-2 border-dashed border-gray-800 rounded-3xl">
-                        No articles found for this language. Please add content in the Admin Panel.
+               <div className="animate-in fade-in duration-300">
+                  {/* Article Search Bar */}
+                  <div className="mb-8 max-w-md">
+                     <div className="relative group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-brand-purple transition-colors" size={18} />
+                        <input
+                           type="text"
+                           placeholder="Search article by title..."
+                           value={articleSearch}
+                           onChange={(e) => setArticleSearch(e.target.value)}
+                           className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-800 focus:border-brand-purple focus:ring-1 focus:ring-brand-purple rounded-lg outline-none transition-all text-sm font-medium text-white placeholder-gray-600 shadow-lg"
+                        />
                      </div>
-                  )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                     {articles
+                        .filter(a => a.language.toLowerCase() === (selectedExam.language || 'English').toLowerCase())
+                        .filter(a => a.title.toLowerCase().includes(articleSearch.toLowerCase()))
+                        .map(article => (
+                           <div
+                              key={article.id}
+                              onClick={() => handleArticleSelect(article)}
+                              className="bg-gray-900/50 border border-gray-800 p-6 rounded-2xl hover:border-brand-purple transition-all cursor-pointer group"
+                           >
+                              <h4 className="text-lg font-bold text-white mb-2 group-hover:text-brand-purple transition-colors">{article.title}</h4>
+                              <div className="text-xs text-gray-500 flex justify-between italic">
+                                 <span>Difficulty: {article.difficulty}</span>
+                                 <span>Tags: {article.tags?.join(', ')}</span>
+                              </div>
+                           </div>
+                        ))}
+                     {articles.filter(a => a.language.toLowerCase() === (selectedExam.language || 'English').toLowerCase()).length === 0 && (
+                        <div className="col-span-full py-20 text-center text-gray-500 border-2 border-dashed border-gray-800 rounded-3xl">
+                           No articles found for this language. Please add content in the Admin Panel.
+                        </div>
+                     )}
+                  </div>
                </div>
             )}
 
