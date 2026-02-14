@@ -48,6 +48,33 @@ if (is_dir('dist')) {
     echo "Error: dist/ folder NOT found. Please ensure your React build is uploaded.\n";
 }
 
+// 5. Check Root Content
+echo "\n--- Root Directory Listing ---\n";
+$rootFiles = scandir('.');
+foreach ($rootFiles as $rf) {
+    if ($rf === '.' || $rf === '..')
+        continue;
+    $type = is_dir($rf) ? '[DIR]' : '[FILE]';
+    echo "$type $rf\n";
+}
+
+// 6. Check 'data' folder
+echo "\n--- Data Folder Check ---\n";
+$dataFolders = ['data', 'public/data', 'dist/data'];
+foreach ($dataFolders as $df) {
+    if (is_dir($df)) {
+        echo "Found directory: $df\n";
+        $dfiles = scandir($df);
+        foreach ($dfiles as $dfile) {
+            if ($dfile === '.' || $dfile === '..')
+                continue;
+            echo "  - $dfile\n";
+        }
+    } else {
+        echo "Directory NOT found: $df\n";
+    }
+}
+
 echo "\nDeployment check finished at: " . date('Y-m-d H:i:s') . "\n";
 echo "</pre>";
 ?>
