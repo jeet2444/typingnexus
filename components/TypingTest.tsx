@@ -736,26 +736,34 @@ const TypingTest: React.FC = () => {
               autoFocus
             />
 
-            {/* Settings Trigger — Top Right Corner */}
-            <div className="fixed right-6 top-24 z-50 flex flex-col gap-2">
-              {/* Sound & View Dropdown */}
+            {/* Unified Settings Trigger — Top Right Corner */}
+            <div className="fixed right-6 top-24 z-50">
               <div className="relative">
                 <button
-                  onClick={() => setOpenSection(openSection === 'soundview' ? null : 'soundview')}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-lg shadow-md hover:shadow-lg transition-all text-sm font-semibold"
+                  onClick={() => setOpenSection(openSection === 'unified-settings' ? null : 'unified-settings')}
+                  className="p-3 bg-white text-teal-600 border border-gray-200 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 active:scale-95 group focus:outline-none ring-2 ring-transparent hover:ring-teal-100"
+                  title="Settings"
                 >
-                  <Layout size={16} className="text-teal-600" />
-                  Sound & View
-                  <ChevronDown size={14} className={`transition-transform ${openSection === 'soundview' ? 'rotate-180' : ''}`} />
+                  <Settings size={24} className={`transition-transform duration-500 ${openSection === 'unified-settings' ? 'rotate-90' : 'group-hover:rotate-45'}`} />
                 </button>
-                {openSection === 'soundview' && (
-                  <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-xl p-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+
+                {openSection === 'unified-settings' && (
+                  <div className="absolute right-0 top-full mt-3 w-64 bg-white border border-gray-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 space-y-1 animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 overflow-hidden ring-1 ring-black/5 z-[60]">
+                    <div className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">Control Panel</div>
+
                     <button
                       onClick={() => setSettings(s => ({ ...s, sound: !s.sound }))}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${settings.sound ? 'bg-teal-500 text-white' : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'}`}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all ${settings.sound ? 'bg-teal-50 text-teal-700' : 'text-gray-600 hover:bg-gray-50'}`}
                     >
-                      <Play size={14} /> {settings.sound ? 'Typing Sound On' : 'Play Typing Sound'}
+                      <div className="flex items-center gap-3">
+                        {settings.sound ? <Volume2 size={18} /> : <Music size={18} className="text-gray-400" />}
+                        <span>Typing Audio</span>
+                      </div>
+                      <div className={`w-8 h-4 rounded-full relative transition-colors ${settings.sound ? 'bg-teal-500' : 'bg-gray-200'}`}>
+                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${settings.sound ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                      </div>
                     </button>
+
                     <button
                       onClick={() => {
                         if (document.fullscreenElement) {
@@ -764,22 +772,30 @@ const TypingTest: React.FC = () => {
                           document.documentElement.requestFullscreen();
                         }
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 transition-all"
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
                     >
-                      <Maximize size={14} /> Enter Fullscreen
+                      <Maximize size={18} className="text-gray-400" />
+                      <span>{document.fullscreenElement ? 'Exit Fullscreen' : 'Enter Fullscreen'}</span>
+                    </button>
+
+                    <div className="h-px bg-gray-100 my-1 mx-2"></div>
+
+                    <button
+                      onClick={() => {
+                        setShowSettings(true);
+                        setOpenSection(null);
+                      }}
+                      className="w-full flex items-center justify-between px-4 py-3 text-sm font-bold text-white bg-gradient-to-r from-teal-500 to-emerald-600 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 group/btn"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Type size={18} className="group-hover/btn:scale-110 transition-transform" />
+                        <span>Typing Settings</span>
+                      </div>
+                      <MoveRight size={16} className="opacity-60 group-hover/btn:translate-x-1 transition-transform" />
                     </button>
                   </div>
                 )}
               </div>
-
-              {/* Settings Gear Button */}
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-lg shadow-md hover:shadow-lg transition-all text-sm font-semibold"
-              >
-                <Settings size={16} className="text-teal-600" />
-                Typing Settings
-              </button>
             </div>
 
             {/* Typing Settings Sidebar */}
