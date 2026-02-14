@@ -1,0 +1,103 @@
+{
+    "profileName": "SSC CGL Tier-I Typing Test",
+    "description": "Standard SSC CGL typing test profile with 10-minute duration, English mode, penalty-based scoring as per SSC guidelines. Uses Net WPM with 5-character word calculation.",
+    "_comment_1": "=== SECTION 1: PRIMARY MODE ===",
+    "calculationParam": "net_wpm",
+    "wordCalculation": "5char",
+    "minEligibilityType": "fixed_wpm",
+    "minEligibilityValue": 35,
+    "languageMode": "fixed",
+    "fixedLanguage": "en",
+    "allowedLanguages": [
+        "en"
+    ],
+    "defaultLanguage": "en",
+    "allowLanguageChange": false,
+    "_comment_2": "=== SECTION 2: HINDI CONFIGURATION ===",
+    "hindiFont": "mangal",
+    "hindiKeyboardLayout": "remington_gail",
+    "hindiComplexity": "standard",
+    "allowAltCodes": false,
+    "hindiStenoAvailable": false,
+    "_comment_3": "=== SECTION 3: ERROR & PENALTY ENGINE ===",
+    "errorClassification": "ssc_aiims",
+    "halfMistakeRules": [
+        "spacing",
+        "capitalization",
+        "punctuation"
+    ],
+    "ignoredErrorLimit": 5,
+    "penaltyMultiplier": 0.5,
+    "_comment_4": "=== SECTION 4: PENALTY & SCORING ===",
+    "penaltyMethod": "per_mistake",
+    "deductionValue": 0.5,
+    "finalScoreCalc": "penalty_factor",
+    "scoreDisplay": "2dec",
+    "showAccuracy": true,
+    "_comment_5": "=== SECTION 5: STENO TEST (optional, set stenoEnabled=true to activate) ===",
+    "stenoEnabled": false,
+    "stenoType": "qualifying",
+    "stenoLanguage": "en",
+    "stenoSpeed": 80,
+    "stenoDictationMin": 10,
+    "stenoTranscriptionMin": 50,
+    "stenoScribeExtraMin": 10,
+    "stenoBackspaceAllowed": true,
+    "stenoSpellcheckAllowed": false,
+    "stenoErrorLimit": 10,
+    "_comment_6": "=== SECTION 6: INTERFACE CONTROLS ===",
+    "durationMin": 10,
+    "practiceSession": "none",
+    "practiceDurationMin": 5,
+    "breakDurationSec": 0,
+    "backspaceEnabled": true,
+    "arrowKeysEnabled": true,
+    "highlight": "word",
+    "showFingerPosition": false,
+    "showOnscreenKeyboard": true,
+    "liveErrors": true,
+    "showSpeedDuringTest": true,
+    "_comment_7": "=== SECTION 7: ADVANCED SETTINGS ===",
+    "categoryWiseEnabled": true,
+    "categoryRules": [
+        {
+            "category": "UR",
+            "minEligibility": 35,
+            "ignoredErrorLimit": 5,
+            "extraTimeMin": 0
+        },
+        {
+            "category": "SC",
+            "minEligibility": 30,
+            "ignoredErrorLimit": 7,
+            "extraTimeMin": 5
+        },
+        {
+            "category": "ST",
+            "minEligibility": 30,
+            "ignoredErrorLimit": 7,
+            "extraTimeMin": 5
+        },
+        {
+            "category": "OBC",
+            "minEligibility": 30,
+            "ignoredErrorLimit": 7,
+            "extraTimeMin": 0
+        },
+        {
+            "category": "PwD",
+            "minEligibility": 25,
+            "ignoredErrorLimit": 10,
+            "extraTimeMin": 20
+        }
+    ],
+    "scribeAllowed": true,
+    "scribeExtraMin": 20,
+    "examType": "recruitment",
+    "resultDisplay": "detailed",
+    "security": {
+        "preventCopyPaste": true,
+        "preventRightClick": true,
+        "singleSession": true
+    }
+}

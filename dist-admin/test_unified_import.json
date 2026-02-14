@@ -1,0 +1,64 @@
+{
+    "categories": [
+        {
+            "id": "ssc-cat",
+            "name": "SSC CGL 2024",
+            "parentId": null,
+            "type": "category"
+        }
+    ],
+    "profiles": [
+        {
+            "id": "ssc-profile-standard",
+            "profileName": "SSC CGL Standard Rules",
+            "description": "Standard rules for SSC CGL Tier 2 typing test.",
+            "calculationParam": "net_wpm",
+            "wordCalculation": "5char",
+            "minEligibilityType": "none",
+            "languageMode": "fixed",
+            "fixedLanguage": "en",
+            "hindiFont": "mangal",
+            "hindiComplexity": "standard",
+            "allowAltCodes": false,
+            "hindiStenoAvailable": false,
+            "errorClassification": "ssc_aiims",
+            "halfMistakeRules": [
+                "spacing",
+                "capitalization",
+                "punctuation"
+            ],
+            "ignoredErrorLimit": 5,
+            "penaltyMultiplier": 1,
+            "penaltyMethod": "per_full_mistake",
+            "deductionValue": 1,
+            "finalScoreCalc": "direct",
+            "scoreDisplay": "2dec",
+            "showAccuracy": true,
+            "stenoEnabled": false,
+            "durationMin": 10,
+            "practiceSession": "none",
+            "breakDurationSec": 0,
+            "backspaceEnabled": true,
+            "arrowKeysEnabled": true,
+            "highlight": "word",
+            "showFingerPosition": false,
+            "showOnscreenKeyboard": true,
+            "liveErrors": true,
+            "showSpeedDuringTest": true,
+            "categoryWiseEnabled": false,
+            "scribeAllowed": false,
+            "examType": "recruitment",
+            "resultDisplay": "detailed"
+        }
+    ],
+    "exams": [
+        {
+            "title": "SSC CGL Tier 2 Mock Test 1",
+            "categoryId": "ssc-cat",
+            "examProfileId": "ssc-profile-standard",
+            "content": "This is a sample typing test content for SSC CGL. It contains various characters and symbols to test your typing speed and accuracy under standard exam conditions. Make sure to maintain a steady rhythm and focus on accuracy first, as penalties for errors can significantly reduce your net WPM.",
+            "status": "Published",
+            "language": "English"
+        }
+    ]
+}

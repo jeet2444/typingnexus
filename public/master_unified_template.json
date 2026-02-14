@@ -1,0 +1,94 @@
+{
+    "categories": [
+        {
+            "id": "ssc-cat",
+            "name": "SSC CGL 2024",
+            "parentId": null,
+            "type": "category"
+        }
+    ],
+    "profiles": [
+        {
+            "id": "profile-ssc-master",
+            "profileName": "SSC CGL Tier 2 Master Rules",
+            "description": "Comprehensive rules for SSC CGL Tier 2 (2024). Includes steno and category exemptions.",
+            "// 1. Primary Mode": "Calculation parameters",
+            "calculationParam": "net_wpm",
+            "wordCalculation": "5char",
+            "minEligibilityType": "fixed_wpm",
+            "minEligibilityValue": 35,
+            "languageMode": "fixed",
+            "fixedLanguage": "en",
+            "// 2. Hindi Configuration": "Specific to Hindi typing",
+            "hindiFont": "mangal",
+            "hindiKeyboardLayout": "remington_gail",
+            "hindiComplexity": "standard",
+            "allowAltCodes": true,
+            "hindiStenoAvailable": false,
+            "// 3. Error Engine": "How mistakes are classified",
+            "errorClassification": "ssc_aiims",
+            "halfMistakeRules": [
+                "spacing",
+                "capitalization",
+                "punctuation",
+                "matra"
+            ],
+            "ignoredErrorLimit": 5,
+            "penaltyMultiplier": 1,
+            "// 4. Scoring": "Penalty application",
+            "penaltyMethod": "per_full_mistake",
+            "deductionValue": 1,
+            "finalScoreCalc": "direct",
+            "scoreDisplay": "2dec",
+            "showAccuracy": true,
+            "// 5. Interface": "Functional restrictions",
+            "durationMin": 15,
+            "practiceSession": "timer",
+            "practiceDurationMin": 2,
+            "breakDurationSec": 30,
+            "backspaceEnabled": true,
+            "arrowKeysEnabled": false,
+            "highlight": "word",
+            "showFingerPosition": true,
+            "showOnscreenKeyboard": true,
+            "liveErrors": true,
+            "showSpeedDuringTest": false,
+            "// 6. Advanced": "Exemptions and domain",
+            "categoryWiseEnabled": true,
+            "categoryRules": [
+                {
+                    "category": "SC",
+                    "minEligibility": 30,
+                    "ignoredErrorLimit": 7
+                },
+                {
+                    "category": "ST",
+                    "minEligibility": 30,
+                    "ignoredErrorLimit": 7
+                },
+                {
+                    "category": "PwD",
+                    "minEligibility": 25,
+                    "ignoredErrorLimit": 10,
+                    "extraTimeMin": 20
+                }
+            ],
+            "scribeAllowed": true,
+            "scribeExtraMin": 20,
+            "examType": "recruitment",
+            "resultDisplay": "detailed"
+        }
+    ],
+    "exams": [
+        {
+            "title": "SSC CGL Tier 2 Mock Test 1",
+            "categoryId": "ssc-cat",
+            "examProfileId": "profile-ssc-master",
+            "content": "This is a high-quality mock test text designed to test all characters. The quick brown fox jumps over the lazy dog. 1234567890. Modern typing tests often include special characters like @, #, $, and % to simulate real-world data entry tasks.",
+            "status": "Published",
+            "language": "English",
+            "liveStatus": "Live",
+            "liveDate": "Feb 20, 2024"
+        }
+    ]
+}

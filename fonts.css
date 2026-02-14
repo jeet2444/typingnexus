@@ -1,0 +1,42 @@
+/* Custom Fonts Configuration */
+
+/* Hindi - Unicode */
+.font-mangal {
+    font-family: 'Mangal', 'Nirmala UI', 'Latha', sans-serif;
+    letter-spacing: normal;
+}
+
+/* Hindi - Legacy (KrutiDev) */
+@font-face {
+    font-family: 'Kruti Dev 010';
+    src: local('Kruti Dev 010'), local('KrutiDev010'), url('https://static.wfonts.com/data/2016/05/21/kruti-dev-010/krdv011.ttf') format('truetype');
+    font-display: swap;
+}
+
+.font-krutidev {
+    font-family: 'Kruti Dev 010', sans-serif;
+}
+
+/* Hindi - Legacy (DevLys) */
+@font-face {
+    font-family: 'DevLys 010';
+    /* Using Kruti Dev as remote fallback because DevLys and Kruti Dev share the same Remington layout mapping. 
+       This ensures text renders correctly even if DevLys isn't locally installed. */
+    src: local('DevLys 010'), local('DevLys010'), url('https://static.wfonts.com/data/2016/05/21/kruti-dev-010/krdv011.ttf') format('truetype');
+    font-display: swap;
+}
+
+.font-devlys {
+    font-family: 'DevLys 010', sans-serif;
+}
+
+/* Punjabi */
+.font-raavi {
+    font-family: 'Raavi', 'Lohit Punjabi', 'Nirmala UI', sans-serif;
+}
+
+/* Marathi */
+.font-marathi {
+    font-family: 'Mangal', 'Nirmala UI', sans-serif;
+    /* Marathi shares script with Hindi usually */
+}
