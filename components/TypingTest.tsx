@@ -350,12 +350,7 @@ const TypingTest: React.FC = () => {
   const handleHindiKeyMapping = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (settings.language !== 'hindi' || settings.layout === 'qwerty') return;
 
-    // Skip special/modifier keys
-    if (e.ctrlKey || e.altKey || e.metaKey || e.key.length > 1) return;
-
     const map = settings.layout === 'remington' ? REMINGTON_DISPLAY_MAP : INSCRIPT_DISPLAY_MAP;
-
-    // Convert e.key to lowercase for map lookup, but track original for shift detection if e.key is a symbol
     const keyLookup = e.key.toLowerCase();
     const mapping = map[keyLookup];
 
@@ -402,6 +397,14 @@ const TypingTest: React.FC = () => {
           inputRef.current.selectionStart = inputRef.current.selectionEnd = start + actualChar.length;
         }
       }, 0);
+    }
+
+    if (e.key === 'Backspace') {
+      if (settings.backspace === 'off') {
+        e.preventDefault();
+        return;
+      }
+      setBackspaceCount(prev => prev + 1);
     }
   };
 
@@ -578,20 +581,30 @@ const TypingTest: React.FC = () => {
     : '100';
 
   const calculateDetailedStats = () => {
-    const originalWords = currentText.split(' ');
-    const typedWords = inputText.trim().split(' ');
+    // Standardize splitting to handle multiple spaces/newlines
+    const originalWords = currentText.trim().split(/\s+/);
+    const typedWords = inputText.trim().split(/\s+/);
 
     let fullMistakes = 0;
     let halfMistakes = 0;
 
+    // Strict Rule: Compare word by word
     const loopLen = Math.max(originalWords.length, typedWords.length);
 
     for (let i = 0; i < loopLen; i++) {
-      const original = originalWords[i] || '';
-      const typed = typedWords[i] || '';
+      const original = originalWords[i];
+      const typed = typedWords[i];
 
-      if (typed !== original) {
-        // Simple logic for now, utilizing settings.errorMethod if needed for display logic
+      if (!original && typed) {
+        // Extra words typed beyond passage length - Full mistake
+        fullMistakes++;
+      } else if (original && !typed) {
+        // Words missed - Full mistake
+        fullMistakes++;
+      } else if (original !== typed) {
+        // Word mismatch
+        // If only case/punctuation differs, many exams call it 'Half'
+        // For now, let's stick to 'Full' but leave room for half-mistake refinement
         fullMistakes++;
       }
     }
@@ -738,7 +751,16 @@ const TypingTest: React.FC = () => {
               style={{ fontSize: `${settings.fontSize}px` }}
               placeholder="Start typing here..."
               value={inputText}
-              onKeyDown={handleHindiKeyMapping}
+              onKeyDown={(e) => {
+                if (e.key === 'Backspace') {
+                  if (settings.backspace === 'off') {
+                    e.preventDefault();
+                    return;
+                  }
+                  setBackspaceCount(prev => prev + 1);
+                }
+                handleHindiKeyMapping(e);
+              }}
               onChange={(e) => {
                 if (settings.language === 'hindi' && settings.layout !== 'qwerty') return; // Handled by KeyDown
                 if (!isActive) {
@@ -1159,7 +1181,7 @@ const TypingTest: React.FC = () => {
                 </div>
                 <div className="border border-gray-300 rounded-lg p-4 flex items-start justify-between">
                   <div>
-                    <div className="text-xs text-gray-500 font-semibold mb-2">Extra Words Typed</div>
+                    <div className="text-xs text-gray-500 font-semibold mb-2">Words Typed</div>
                     <div className="text-2xl font-black text-gray-800">{testResult?.totalWordsTyped}</div>
                   </div>
                   <Target size={22} className="text-gray-400 mt-1" />
@@ -1173,6 +1195,43 @@ const TypingTest: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Detailed Comparison Link */}
+            <div className="flex justify-center mt-6 mb-4">
+              <button
+                onClick={() => setShowDetailedComparison(!showDetailedComparison)}
+                className="flex items-center gap-2 text-teal-600 hover:text-teal-700 font-bold text-sm transition-colors"
+              >
+                {showDetailedComparison ? 'Hide Comparison' : 'Show Original vs Typed Comparison'}
+                <ChevronDown size={14} className={`transition-transform ${showDetailedComparison ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+
+            {/* Paragraph Comparison View */}
+            {showDetailedComparison && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in zoom-in-95 duration-300">
+                <div className="space-y-3">
+                  <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1">Original Paragraph</h4>
+                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 text-gray-800 leading-relaxed font-mono text-sm max-h-96 overflow-y-auto custom-scrollbar shadow-inner">
+                    {currentText}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1">Your Typed Paragraph</h4>
+                  <div className="bg-white p-6 rounded-xl border border-teal-200 text-gray-800 leading-relaxed font-mono text-sm max-h-96 overflow-y-auto custom-scrollbar shadow-lg">
+                    {inputText.split(/\s+/).map((word, idx) => {
+                      const original = currentText.split(/\s+/)[idx];
+                      const isError = word !== original;
+                      return (
+                        <span key={idx} className={`${isError ? 'text-red-600 bg-red-50 px-1 rounded' : 'text-teal-700'} inline-block mr-1.5 mb-1`}>
+                          {word}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Exam Qualification Check */}
             {activeProfile && (
