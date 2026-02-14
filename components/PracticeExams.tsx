@@ -247,11 +247,19 @@ const PracticeExams: React.FC = () => {
         if (activeTab === 'Excel' || activeTab === 'Word') return [];
 
         // 1. Get articles from Content Library
-        const libraryItems = contentLibrary.filter(c => c.language.toLowerCase() === activeTab.toLowerCase());
+        const libraryItems = contentLibrary.filter(c => {
+            const artLang = c.language.toLowerCase();
+            const tabLang = activeTab.toLowerCase();
+            // Match if tab is "Both" or article matches tab (e.g., "Hindi" matches "Hindi Remington")
+            return tabLang === 'both' || artLang.includes(tabLang) || tabLang.includes(artLang);
+        });
 
         // 2. Get exams from Admin Exams that match the language and (group or category)
         const relevantExams = adminExams.filter(e => {
-            const langMatch = e.language === activeTab || (e.enabledLanguages && e.enabledLanguages.includes(activeTab));
+            const examLang = (e.language || '').toLowerCase();
+            const tabLang = activeTab.toLowerCase();
+            const langMatch = tabLang === 'both' || examLang.includes(tabLang) || tabLang.includes(examLang) ||
+                (e.enabledLanguages && e.enabledLanguages.some(l => l.toLowerCase().includes(tabLang)));
             if (!langMatch) return false;
 
             // Match by category name

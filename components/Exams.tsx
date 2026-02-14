@@ -220,7 +220,15 @@ const Exams: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                      {articles
-                        .filter(a => a.language.toLowerCase() === (selectedExam.language || 'English').toLowerCase())
+                        .filter(a => {
+                           const examLang = (selectedExam.language || 'English').toLowerCase();
+                           const artLang = a.language.toLowerCase();
+
+                           if (examLang === 'both') return true;
+
+                           // Match if either side contains the other (e.g., "Hindi" matches "Hindi Remington")
+                           return artLang.includes(examLang) || examLang.includes(artLang);
+                        })
                         .filter(a => a.title.toLowerCase().includes(articleSearch.toLowerCase()))
                         .map(article => (
                            <div
