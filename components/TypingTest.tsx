@@ -102,6 +102,7 @@ const TypingTest: React.FC = () => {
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [newBadges, setNewBadges] = useState<Achievement[]>([]);
   const [showDetailedComparison, setShowDetailedComparison] = useState(true);
+  const [showQualificationCheck, setShowQualificationCheck] = useState(false);
   const [showFontSelector, setShowFontSelector] = useState(false);
 
   // AI Coach State
@@ -1326,8 +1327,18 @@ const TypingTest: React.FC = () => {
               </div>
             )}
 
-            {/* Exam Qualification Check */}
-            {activeProfile && (
+            {/* Exam Qualification Check - Optional */}
+            <div className="flex justify-center mt-4 mb-4">
+              <button
+                onClick={() => setShowQualificationCheck(!showQualificationCheck)}
+                className="flex items-center gap-2 text-brand-purple hover:text-purple-600 font-bold text-sm transition-colors"
+              >
+                {showQualificationCheck ? 'Hide Unified Qualification Check' : 'Show Unified Qualification Check'}
+                <ChevronDown size={14} className={`transition-transform ${showQualificationCheck ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+
+            {showQualificationCheck && activeProfile && (
               <ExamQualificationTabs
                 profiles={availableProfiles}
                 currentProfile={activeProfile}
