@@ -2,14 +2,18 @@
   RewriteEngine On
   RewriteBase /
 
-  # 1. Allow direct access to PHP files (deploy, save_settings)
+  # 1. Allow PHP files (deployment/save)
   RewriteRule \.php$ - [L]
 
-  # 2. Key assets should be served from dist
-  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f
-  RewriteRule ^(.*)$ dist/$1 [L]
+  # 2. Prevent loops: If already in dist, don't rewrite
+  RewriteRule ^dist/ - [L]
 
-  # 3. Everything else (including root) goes to dist/index.html
+  # 3. If file exists in dist, rewrite to it (e.g. assets, fonts)
+  RewriteCond %{REQUEST_URI} !^/dist/
+  RewriteRule ^(.*)$ dist/$1 [L,QSA]
+
+  # 4. Fallback for SPA routing to dist/index.html
   RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ dist/index.html [L]
 </IfModule>
