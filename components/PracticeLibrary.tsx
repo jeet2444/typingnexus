@@ -74,18 +74,26 @@ const PracticeLibrary: React.FC = () => {
         difficulty: 'Medium', // Default
         category: 'Articles'
       }));
+    } else if (language === 'english') {
+      baseSets = ENGLISH_TITLES.map((title, i) => ({
+        id: `legacy-${i}`,
+        title,
+        difficulty: 'Medium',
+        category: 'Paragraphs'
+      }));
     } else {
       // For Hindi (or fallback), use Titles logic (Legacy/Mock) until data is populated
-      const titles = language === 'english' ? ENGLISH_TITLES : HINDI_TITLES;
-      baseSets = Array.from({ length: 50 }, (_, i) => ({
-        id: i + 1,
-        title: titles[i % titles.length],
+      const titles = HINDI_TITLES;
+      baseSets = titles.map((title, i) => ({
+        id: `legacy-hi-${i}`,
+        title: title,
         difficulty: i % 3 === 0 ? 'Easy' : i % 3 === 1 ? 'Medium' : 'Hard',
         category: 'Paragraphs',
         keys: 'All'
       }));
     }
 
+    // Merge: Dynamic first, then legacy/mock
     return [...dynamicContent, ...baseSets];
   };
 

@@ -1,8 +1,8 @@
 <?php
 // save_settings.php
-// Handles saving settings.json on the server
+// Handles saving JSON data to the server (Settings, Content, Secure Data)
 
-// CORS headers to allow access from subdomains
+// CORS headers to allow access from subdomains (admin.typingnexus.in -> typingnexus.in)
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
@@ -20,35 +20,79 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Get JSON input
 $input = file_get_contents('php://input');
-$data = json_decode($input, true);
+$requestData = json_decode($input, true);
 
-if (!$data) {
+if (!$requestData || !isset($requestData['type']) || !isset($requestData['data'])) {
     http_response_code(400);
-    echo json_encode(["error" => "Invalid JSON"]);
+    echo json_encode(["error" => "Invalid JSON structure. Expected 'type' and 'data'."]);
     exit;
 }
 
-// Path to settings.json (in the parent directory or same directory depending on structure)
-// Since this is likely in /api/ or root, let's assume root for simplicity or adjustable logic.
-// If this file is at public/save_settings.php, then settings.json is at public/settings.json
-$file = __DIR__ . '/settings.json';
+$type = $requestData['type'];
+$dataToSave = $requestData['data'];
 
-// Validate permissions (basic)
-// Use __DIR__ to ensure we write to the same folder as the script
-if (!is_writable($file) && !is_writable(__DIR__)) {
-    // Attempt to create if not exists
-    if (!file_exists($file) && !file_put_contents($file, '{}')) {
+// Determine file path based on type
+$filename = '';
+switch ($type) {
+    case 'settings':
+        $filename = 'settings.json';
+        break;
+    case 'content':
+        $filename = 'content.json';
+        break;
+    case 'secure_data':
+        $filename = 'secure_data.json'; // Users, History, Invoices
+        break;
+    default:
+        http_response_code(400);
+        echo json_encode(["error" => "Invalid data type provided."]);
+        exit;
+}
+
+// Define the absolute path to the data directory
+$targetDir = __DIR__ . '/data';
+
+if (!is_dir($targetDir)) {
+    // Attempt to create data directory if it doesn't exist
+    if (!mkdir($targetDir, 0755, true)) {
+        // Log error if mkdir fails
         http_response_code(500);
-        echo json_encode(["error" => "Server permission denied. Cannot write to file.", "path" => $file]);
+        echo json_encode(["error" => "Failed to create data directory at $targetDir. Please check server permissions."]);
         exit;
     }
 }
 
-// Write Data
-if (file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT))) {
-    echo json_encode(["success" => true, "message" => "Settings saved successfully", "path" => $file]);
+// Ensure the directory is writable
+if (!is_writable($targetDir)) {
+    http_response_code(500);
+    echo json_encode(["error" => "Data directory is not writable at $targetDir. Please check server permissions."]);
+    exit;
+}
+
+$file = $targetDir . '/' . $filename;
+
+// Security check: Ensure we are writing valid JSON
+$jsonContent = json_encode($dataToSave, JSON_PRETTY_PRINT);
+if ($jsonContent === false) {
+    http_response_code(500);
+    echo json_encode(["error" => "Failed to encode data to JSON"]);
+    exit;
+}
+
+// Write Data (with backup)
+if (file_exists($file)) {
+    copy($file, $file . '.bak');
+}
+
+if (file_put_contents($file, $jsonContent)) {
+    echo json_encode([
+        "success" => true,
+        "message" => "Saved successfully",
+        "type" => $type,
+        "file" => $filename
+    ]);
 } else {
     http_response_code(500);
-    echo json_encode(["error" => "Failed to write data"]);
+    echo json_encode(["error" => "Failed to write data to file", "path" => $file]);
 }
 ?>

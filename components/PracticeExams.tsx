@@ -241,7 +241,7 @@ const PracticeExams: React.FC = () => {
         if (activeTab === 'Excel' || activeTab === 'Word') return [];
 
         // 1. Get articles from Content Library
-        const libraryItems = contentLibrary.filter(c => c.language === activeTab);
+        const libraryItems = contentLibrary.filter(c => c.language.toLowerCase() === activeTab.toLowerCase());
 
         // 2. Get exams from Admin Exams that match the language and (group or category)
         const relevantExams = adminExams.filter(e => {
