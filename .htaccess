@@ -1,18 +1,24 @@
+DirectoryIndex dist/index.html index.php index.html
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # 1. Allow PHP files (deployment/save)
+  # 1. Allow PHP files
   RewriteRule \.php$ - [L]
 
-  # 2. Prevent loops: If already in dist, don't rewrite
+  # 2. Redirect root and index.html to dist/index.html
+  RewriteRule ^$ dist/index.html [L]
+  RewriteRule ^index\.html$ dist/index.html [L]
+
+  # 3. Prevent loops for dist folder
   RewriteRule ^dist/ - [L]
 
-  # 3. If file exists in dist, rewrite to it (e.g. assets, fonts)
+  # 4. Rewrite all other requests to dist/
   RewriteCond %{REQUEST_URI} !^/dist/
   RewriteRule ^(.*)$ dist/$1 [L,QSA]
 
-  # 4. Fallback for SPA routing to dist/index.html
+  # 5. SPA Fallback
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ dist/index.html [L]
