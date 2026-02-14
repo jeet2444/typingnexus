@@ -584,36 +584,77 @@ const TypingTest: React.FC = () => {
     ? Math.max(0, ((keystrokes - errors) / keystrokes) * 100).toFixed(1)
     : '100';
 
-  const calculateDetailedStats = () => {
-    // Standardize splitting to handle multiple spaces/newlines
-    const originalWords = currentText.trim().split(/\s+/);
-    const typedWords = inputText.trim().split(/\s+/);
+  /**
+   * LCS-based Word Alignment to handle additions/deletions accurately.
+   */
+  const alignWords = (original: string[], typed: string[]) => {
+    const m = original.length;
+    const n = typed.length;
+    const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
 
-    let fullMistakes = 0;
-    let halfMistakes = 0;
-
-    // Strict Rule: Compare word by word
-    const loopLen = Math.max(originalWords.length, typedWords.length);
-
-    for (let i = 0; i < loopLen; i++) {
-      const original = originalWords[i];
-      const typed = typedWords[i];
-
-      if (!original && typed) {
-        // Extra words typed beyond passage length - Full mistake
-        fullMistakes++;
-      } else if (original && !typed) {
-        // Words missed - Full mistake
-        fullMistakes++;
-      } else if (original !== typed) {
-        // Word mismatch
-        // If only case/punctuation differs, many exams call it 'Half'
-        // For now, let's stick to 'Full' but leave room for half-mistake refinement
-        fullMistakes++;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (original[i - 1] === typed[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1] + 1;
+        } else {
+          dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
       }
     }
 
-    return { fullMistakes, halfMistakes };
+    const alignment: { original: string | null; typed: string | null; status: 'match' | 'mismatch' | 'missed' | 'extra' }[] = [];
+    let i = m, j = n;
+
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && original[i - 1] === typed[j - 1]) {
+        alignment.unshift({ original: original[i - 1], typed: typed[j - 1], status: 'match' });
+        i--; j--;
+      } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+        // Extra word typed
+        alignment.unshift({ original: null, typed: typed[j - 1], status: 'extra' });
+        j--;
+      } else {
+        // Original word missed
+        alignment.unshift({ original: original[i - 1], typed: null, status: 'missed' });
+        i--;
+      }
+    }
+
+    // Secondary pass: coalesce missed + extra into 'mismatch' if they are at the same position
+    const flattened: typeof alignment = [];
+    for (let k = 0; k < alignment.length; k++) {
+      const current = alignment[k];
+      if (current.status === 'missed' && k + 1 < alignment.length && alignment[k + 1].status === 'extra') {
+        flattened.push({ original: current.original, typed: alignment[k + 1].typed, status: 'mismatch' });
+        k++;
+      } else if (current.status === 'extra' && k + 1 < alignment.length && alignment[k + 1].status === 'missed') {
+        flattened.push({ original: alignment[k + 1].original, typed: current.typed, status: 'mismatch' });
+        k++;
+      } else {
+        flattened.push(current);
+      }
+    }
+
+    return flattened;
+  };
+
+  const calculateDetailedStats = () => {
+    const originalWords = currentText.trim().split(/\s+/);
+    const typedWords = inputText.trim().split(/\s+/).filter(Boolean);
+
+    if (typedWords.length === 0) return { fullMistakes: 0, halfMistakes: 0, alignment: [] };
+
+    const alignment = alignWords(originalWords, typedWords);
+    let fullMistakes = 0;
+    let halfMistakes = 0;
+
+    alignment.forEach(item => {
+      if (item.status === 'missed' || item.status === 'extra' || item.status === 'mismatch') {
+        fullMistakes++;
+      }
+    });
+
+    return { fullMistakes, halfMistakes, alignment };
   };
 
   const finishTest = () => {
@@ -1302,27 +1343,59 @@ const TypingTest: React.FC = () => {
               </button>
             </div>
 
-            {/* Paragraph Comparison View */}
+            {/* Paragraph Comparison View - Alignment Aware */}
             {showDetailedComparison && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in zoom-in-95 duration-300">
-                <div className="space-y-3">
-                  <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1">Original Paragraph</h4>
-                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 text-gray-800 leading-relaxed font-mono text-sm max-h-96 overflow-y-auto custom-scrollbar shadow-inner">
-                    {currentText}
+              <div className="animate-in fade-in zoom-in-95 duration-300">
+                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
+                  <div className="flex items-center justify-between mb-4 px-2">
+                    <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest">Detailed Analysis (Alignment Mode)</h4>
+                    <div className="flex gap-4 text-[10px] font-bold">
+                      <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-500"></span> Correct</div>
+                      <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500"></span> Wrong</div>
+                      <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400"></span> Missed</div>
+                      <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500"></span> Extra</div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-3">
-                  <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest pl-1">Your Typed Paragraph</h4>
-                  <div className="bg-white p-6 rounded-xl border border-teal-200 text-gray-800 leading-relaxed font-mono text-sm max-h-96 overflow-y-auto custom-scrollbar shadow-lg">
-                    {inputText.split(/\s+/).map((word, idx) => {
-                      const original = currentText.split(/\s+/)[idx];
-                      const isError = word !== original;
-                      return (
-                        <span key={idx} className={`${isError ? 'text-red-600 bg-red-50 px-1 rounded' : 'text-teal-700'} inline-block mr-1.5 mb-1`}>
-                          {word}
-                        </span>
-                      );
-                    })}
+
+                  <div className="p-6 bg-gray-50/50 rounded-xl border border-gray-100 text-gray-800 leading-relaxed font-mono text-sm max-h-[500px] overflow-y-auto custom-scrollbar">
+                    <div className="flex flex-wrap gap-y-2">
+                      {calculateDetailedStats().alignment.map((item, idx) => {
+                        if (item.status === 'match') {
+                          return <span key={idx} className="text-teal-700 mr-2">{item.typed}</span>;
+                        }
+                        if (item.status === 'mismatch') {
+                          return (
+                            <span key={idx} className="relative group mr-2">
+                              <span className="text-red-600 bg-red-100 px-1 rounded border-b-2 border-red-300 cursor-help">{item.typed}</span>
+                              <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                                Original: {item.original}
+                              </span>
+                            </span>
+                          );
+                        }
+                        if (item.status === 'missed') {
+                          return (
+                            <span key={idx} className="relative group mr-2">
+                              <span className="text-amber-600 bg-amber-50 px-1 rounded border-b-2 border-amber-300 cursor-help opacity-40">[{item.original}]</span>
+                              <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                                Missed Word
+                              </span>
+                            </span>
+                          );
+                        }
+                        if (item.status === 'extra') {
+                          return (
+                            <span key={idx} className="relative group mr-2">
+                              <span className="text-purple-600 bg-purple-50 px-1 rounded border-b-2 border-purple-300 cursor-helpDecoration">{item.typed}</span>
+                              <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                                Extra Word
+                              </span>
+                            </span>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
