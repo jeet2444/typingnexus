@@ -804,19 +804,76 @@ const TypingTest: React.FC = () => {
                 </button>
 
                 {openSection === 'unified-settings' && (
-                  <div className="absolute right-0 top-full mt-3 w-64 bg-white border border-gray-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 space-y-1 animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 overflow-hidden ring-1 ring-black/5 z-[60]">
-                    <div className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">Control Panel</div>
+                  <div className="absolute right-0 top-full mt-3 w-72 bg-white border border-gray-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 space-y-1 animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-200 overflow-hidden ring-1 ring-black/5 z-[60]">
+                    <div className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">Quick Control</div>
 
+                    {/* Highlight Toggle */}
+                    <button
+                      onClick={() => setSettings(s => ({ ...s, highlight: !s.highlight }))}
+                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${settings.highlight ? 'bg-amber-50 text-amber-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Highlighter size={18} className={settings.highlight ? 'text-amber-500' : 'text-gray-400'} />
+                        <span>Highlight Words</span>
+                      </div>
+                      <div className={`w-8 h-4 rounded-full relative transition-colors ${settings.highlight ? 'bg-amber-500' : 'bg-gray-200'}`}>
+                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${settings.highlight ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                      </div>
+                    </button>
+
+                    {/* Compulsory Correct Toggle */}
+                    <button
+                      onClick={() => setSettings(s => ({ ...s, compulsoryCorrect: !s.compulsoryCorrect }))}
+                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${settings.compulsoryCorrect ? 'bg-red-50 text-red-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Check size={18} className={settings.compulsoryCorrect ? 'text-red-500' : 'text-gray-400'} />
+                        <span>Compulsory Correct</span>
+                      </div>
+                      <div className={`w-8 h-4 rounded-full relative transition-colors ${settings.compulsoryCorrect ? 'bg-red-500' : 'bg-gray-200'}`}>
+                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${settings.compulsoryCorrect ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                      </div>
+                    </button>
+
+                    {/* Hall Sound Toggle */}
+                    <button
+                      onClick={() => setSettings(s => ({ ...s, backgroundSound: !s.backgroundSound }))}
+                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${settings.backgroundSound ? 'bg-teal-50 text-teal-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Volume2 size={18} className={settings.backgroundSound ? 'text-teal-500' : 'text-gray-400'} />
+                        <span>Examination Hall Sound</span>
+                      </div>
+                      <div className={`w-8 h-4 rounded-full relative transition-colors ${settings.backgroundSound ? 'bg-teal-500' : 'bg-gray-200'}`}>
+                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${settings.backgroundSound ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                      </div>
+                    </button>
+
+                    {/* Auto Start Toggle */}
+                    <button
+                      onClick={() => setSettings(s => ({ ...s, autoStart: !s.autoStart }))}
+                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${settings.autoStart ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Clock size={18} className={settings.autoStart ? 'text-blue-500' : 'text-gray-400'} />
+                        <span>Auto Start Timer</span>
+                      </div>
+                      <div className={`w-8 h-4 rounded-full relative transition-colors ${settings.autoStart ? 'bg-blue-500' : 'bg-gray-200'}`}>
+                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${settings.autoStart ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                      </div>
+                    </button>
+
+                    {/* Typing Audio Toggle (moved and styled consistently) */}
                     <button
                       onClick={() => setSettings(s => ({ ...s, sound: !s.sound }))}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all ${settings.sound ? 'bg-teal-50 text-teal-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${settings.sound ? 'bg-teal-50 text-teal-700' : 'text-gray-600 hover:bg-gray-50'}`}
                     >
                       <div className="flex items-center gap-3">
                         {settings.sound ? <Volume2 size={18} /> : <Music size={18} className="text-gray-400" />}
                         <span>Typing Audio</span>
                       </div>
                       <div className={`w-8 h-4 rounded-full relative transition-colors ${settings.sound ? 'bg-teal-500' : 'bg-gray-200'}`}>
-                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${settings.sound ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${settings.sound ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
                       </div>
                     </button>
 
@@ -828,7 +885,7 @@ const TypingTest: React.FC = () => {
                           document.documentElement.requestFullscreen();
                         }
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
                     >
                       <Maximize size={18} className="text-gray-400" />
                       <span>{document.fullscreenElement ? 'Exit Fullscreen' : 'Enter Fullscreen'}</span>
@@ -844,8 +901,8 @@ const TypingTest: React.FC = () => {
                       className="w-full flex items-center justify-between px-4 py-3 text-sm font-bold text-white bg-gradient-to-r from-teal-500 to-emerald-600 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 group/btn"
                     >
                       <div className="flex items-center gap-3">
-                        <Type size={18} className="group-hover/btn:scale-110 transition-transform" />
-                        <span>Typing Settings</span>
+                        <Settings size={18} className="group-hover/btn:rotate-45 transition-transform" />
+                        <span>All Typing Settings</span>
                       </div>
                       <MoveRight size={16} className="opacity-60 group-hover/btn:translate-x-1 transition-transform" />
                     </button>
@@ -861,10 +918,44 @@ const TypingTest: React.FC = () => {
                 <div className="relative w-96 bg-white h-full shadow-2xl animate-in slide-in-from-right duration-300 overflow-y-auto">
                   {/* Header */}
                   <div className="flex justify-between items-center p-6 border-b border-gray-200">
-                    <h3 className="text-xl font-bold text-gray-800">Typing Settings</h3>
-                    <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-700 transition-colors">
-                      <X size={22} />
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <Settings size={22} className="text-teal-600" />
+                      <h3 className="text-xl font-bold text-gray-800">Test Settings</h3>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => {
+                          setSettings({
+                            backspace: 'on',
+                            highlight: false,
+                            highlightMode: 'None',
+                            autoScroll: true,
+                            sound: false,
+                            extraSpace: true,
+                            fontSize: 18,
+                            tcsLayout: false,
+                            sonyHighlight: false,
+                            customDuration: null,
+                            language: 'english',
+                            layout: 'qwerty',
+                            fontFamily: 'sans',
+                            hideUserInfo: false,
+                            showCursor: true,
+                            security: { preventCopyPaste: false, preventRightClick: false, singleSession: false },
+                            spellcheck: false,
+                            compulsoryCorrect: false,
+                            autoStart: false,
+                            backgroundSound: false
+                          });
+                        }}
+                        className="text-xs font-bold text-gray-400 hover:text-teal-600 transition-colors border border-gray-200 px-3 py-1.5 rounded-lg"
+                      >
+                        Reset to Defaults
+                      </button>
+                      <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-700 transition-colors">
+                        <X size={22} />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="p-4 space-y-2">
