@@ -425,20 +425,22 @@ const TypingTest: React.FC = () => {
   const currentWordRef = useRef<HTMLSpanElement>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Background Atmosphere Sound Logic
+  // Background Atmosphere Sound Logic (Examination Hall Sound)
   useEffect(() => {
-    if (passageAudioUrl) {
-      const audio = new Audio(passageAudioUrl);
-      audio.loop = true;
-      audio.volume = 0.4;
-      backgroundAudioRef.current = audio;
+    // Default Hall Sound from User
+    const HALL_SOUND_URL = "https://docs.google.com/uc?export=download&id=19FlNT2MTz_ZHqDSBowWbn-KMiVGlsQSY";
+    const audioUrl = passageAudioUrl || HALL_SOUND_URL;
 
-      return () => {
-        audio.pause();
-        audio.src = "";
-        backgroundAudioRef.current = null;
-      };
-    }
+    const audio = new Audio(audioUrl);
+    audio.loop = true;
+    audio.volume = 0.4;
+    backgroundAudioRef.current = audio;
+
+    return () => {
+      audio.pause();
+      audio.src = "";
+      backgroundAudioRef.current = null;
+    };
   }, [passageAudioUrl]);
 
   useEffect(() => {
@@ -1013,8 +1015,8 @@ const TypingTest: React.FC = () => {
 
                             <div className="flex items-center justify-between">
                               <div className="flex flex-col">
-                                <span className="text-sm text-gray-700 font-semibold">Background Typing Sound</span>
-                                <span className="text-[10px] text-gray-400">Play background typing sounds just like in exam</span>
+                                <span className="text-sm text-gray-700 font-semibold">Examination Hall Sound</span>
+                                <span className="text-[10px] text-gray-400">Play real exam center background audio</span>
                               </div>
                               <button
                                 onClick={() => setSettings(s => ({ ...s, backgroundSound: !s.backgroundSound }))}
