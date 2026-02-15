@@ -108,10 +108,16 @@ const Footer: React.FC = () => {
             <div className="w-1 h-4 bg-blue-500 rounded-full"></div> Exams Covered
           </h4>
           <ul className="space-y-3 text-sm text-gray-400">
-            <li><span className="hover:text-blue-400 cursor-default">RSSB LDC / Junior Assistant</span></li>
-            <li><span className="hover:text-blue-400 cursor-default">SSC CGL / CHSL</span></li>
-            <li><span className="hover:text-blue-400 cursor-default">RRB NTPC / Group D</span></li>
-            <li><span className="hover:text-blue-400 cursor-default">UPPCL / State PSC</span></li>
+            {(settings?.footerExams || [
+              { label: "RSSB LDC / Junior Assistant", href: "/practice-exams" },
+              { label: "SSC CGL / CHSL", href: "/practice-exams" },
+              { label: "RRB NTPC / Group D", href: "/practice-exams" },
+              { label: "UPPCL / State PSC", href: "/practice-exams" }
+            ]).map((exam, idx) => (
+              <li key={idx}>
+                <Link to={exam.href} className="hover:text-blue-400 transition-colors">{exam.label}</Link>
+              </li>
+            ))}
             {settings?.showPricing !== false && <li><Link to="/pricing" className="hover:text-white bg-white/5 px-2 py-1 rounded inline-block transition-colors font-medium border border-white/10 mt-2">View All Plans →</Link></li>}
           </ul>
         </div>
@@ -151,8 +157,8 @@ const Footer: React.FC = () => {
               <Link key={idx} to={link.href} className="hover:text-gray-300 transition-colors">{link.label}</Link>
             )) || (
                 <>
-                  <Link to="#" className="hover:text-gray-300 transition-colors">Privacy Policy</Link>
-                  <Link to="#" className="hover:text-gray-300 transition-colors">Terms of Service</Link>
+                  <Link to="/" className="hover:text-gray-300 transition-colors">Home</Link>
+                  <Link to="/practice" className="hover:text-gray-300 transition-colors">Practice</Link>
                 </>
               )}
           </div>

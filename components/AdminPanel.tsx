@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Menu, LayoutDashboard, Users, FileText, Settings, LogOut, ChevronRight, Plus, X, Search, Filter, Download, Trash2, Edit, Save, Check, AlertTriangle, Shield, CheckCircle, Smartphone, ExternalLink, Globe, BarChart3, Clock, Calendar, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Youtube, Eye, EyeOff, RotateCcw, CreditCard, Tag, Receipt, Megaphone, Bell, PenTool, Inbox, HelpCircle, UploadCloud, Cpu, ClipboardList, ToggleRight, BookOpen, FileStack, FileSpreadsheet, Package, Award, Trophy, ListChecks, Calculator, GripVertical, CornerDownRight, Edit2, Activity, RefreshCw, Database, FileJson, Code, FileCode, Wallet, Ban, Monitor, ArrowRight, History, ShieldAlert, UserCheck, UserMinus, Briefcase, DollarSign, Image, Zap, BellRing, Server, PlusCircle, MessageSquare, Star, Heart, Share2, PieChart, ShieldCheck, Layers, HardDrive, Moon, Sun, Unlock, TrendingUp, Send, Target, ChevronLeft,
-  XCircle, Keyboard, Music, Image as ImageIcon, Folder
+  XCircle, Keyboard, Music, Image as ImageIcon, Folder, List, Layout
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -1495,6 +1495,50 @@ const SettingsView: React.FC<{ settings: any, setSettings: any }> = ({ settings,
                   </div>
                 </div>
               </div>
+
+              <div className="border-t border-gray-800 pt-6">
+                <h4 className="font-bold text-gray-200 mb-4 flex items-center gap-2"><List size={16} /> Footer Links (Bottom Bar)</h4>
+                <div className="space-y-3">
+                  {(settings.footerLinks || []).map((link: any, idx: number) => (
+                    <div key={idx} className="flex gap-4">
+                      <input className="input-field flex-1" value={link.label} onChange={e => {
+                        const newLinks = [...settings.footerLinks];
+                        newLinks[idx].label = e.target.value;
+                        updateSetting('footerLinks', newLinks);
+                      }} placeholder="Label" />
+                      <input className="input-field flex-1" value={link.href} onChange={e => {
+                        const newLinks = [...settings.footerLinks];
+                        newLinks[idx].href = e.target.value;
+                        updateSetting('footerLinks', newLinks);
+                      }} placeholder="URL / Route" />
+                      <button onClick={() => updateSetting('footerLinks', settings.footerLinks.filter((_: any, i: number) => i !== idx))} className="text-red-400 p-2"><Trash2 size={16} /></button>
+                    </div>
+                  ))}
+                  <button onClick={() => updateSetting('footerLinks', [...(settings.footerLinks || []), { label: '', href: '' }])} className="btn-secondary text-xs py-1"><Plus size={14} /> Add Link</button>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 pt-6">
+                <h4 className="font-bold text-gray-200 mb-4 flex items-center gap-2"><Layout size={16} /> Footer: Exams Covered</h4>
+                <div className="space-y-3">
+                  {(settings.footerExams || []).map((exam: any, idx: number) => (
+                    <div key={idx} className="flex gap-4">
+                      <input className="input-field flex-1" value={exam.label} onChange={e => {
+                        const newExams = [...settings.footerExams];
+                        newExams[idx].label = e.target.value;
+                        updateSetting('footerExams', newExams);
+                      }} placeholder="Exam Name" />
+                      <input className="input-field flex-1" value={exam.href} onChange={e => {
+                        const newExams = [...settings.footerExams];
+                        newExams[idx].href = e.target.value;
+                        updateSetting('footerExams', newExams);
+                      }} placeholder="/practice-exams" />
+                      <button onClick={() => updateSetting('footerExams', settings.footerExams.filter((_: any, i: number) => i !== idx))} className="text-red-400 p-2"><Trash2 size={16} /></button>
+                    </div>
+                  ))}
+                  <button onClick={() => updateSetting('footerExams', [...(settings.footerExams || []), { label: '', href: '' }])} className="btn-secondary text-xs py-1"><Plus size={14} /> Add Exam Link</button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1883,10 +1927,34 @@ const CouponsView: React.FC<{ coupons: any[], setCoupons: any }> = ({ coupons, s
   );
 };
 
-const ComboPackView: React.FC<{ packages: any[], setPackages: any }> = ({ packages, setPackages }) => {
+const PricingManager: React.FC<{ packages: any[], setPackages: any }> = ({ packages, setPackages }) => {
   const [showAdd, setShowAdd] = useState(false);
-  const [newPkg, setNewPkg] = useState({ name: '', price: '', duration: 'Monthly', isCombo: false, features: [] as string[] });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [newPkg, setNewPkg] = useState({
+    name: '', subtitle: '', price: '', currency: '₹', period: '/ Year',
+    durationDays: 30, features: [] as string[], isCombo: false,
+    highlight: false, badge: '', type: 'Student', buttonText: 'Get Started'
+  });
   const [currentFeature, setCurrentFeature] = useState('');
+
+  const resetForm = () => {
+    setNewPkg({
+      name: '', subtitle: '', price: '', currency: '₹', period: '/ Year',
+      durationDays: 30, features: [], isCombo: false,
+      highlight: false, badge: '', type: 'Student', buttonText: 'Get Started'
+    });
+    setEditingId(null);
+    setShowAdd(false);
+  };
+
+  const handleEdit = (pkg: any) => {
+    setNewPkg({
+      ...pkg,
+      price: pkg.price.toString()
+    });
+    setEditingId(pkg.id);
+    setShowAdd(true);
+  };
 
   const addFeature = () => {
     if (currentFeature.trim()) {
@@ -1901,86 +1969,172 @@ const ComboPackView: React.FC<{ packages: any[], setPackages: any }> = ({ packag
 
   const handleSave = () => {
     if (!newPkg.name || !newPkg.price) return alert("Name and Price are required");
-    const id = packages.length > 0 ? Math.max(...packages.map(p => p.id)) + 1 : 1;
-    setPackages([...packages, { id, ...newPkg, price: Number(newPkg.price) }]);
-    setShowAdd(false);
-    setNewPkg({ name: '', price: '', duration: 'Monthly', isCombo: false, features: [] });
+
+    let updatedPackages;
+    if (editingId) {
+      updatedPackages = packages.map(p => p.id === editingId ? { ...p, ...newPkg, price: Number(newPkg.price) } : p);
+    } else {
+      const id = packages.length > 0 ? Math.max(...packages.map(p => p.id)) + 1 : 1;
+      updatedPackages = [...packages, { id, ...newPkg, price: Number(newPkg.price) }];
+    }
+
+    setPackages(updatedPackages);
+    resetForm();
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm('Are you sure you want to delete this package?')) {
+      setPackages(packages.filter(p => p.id !== id));
+    }
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-display font-bold">Pricing & Bundles</h2>
-        <button onClick={() => setShowAdd(true)} className="bg-brand-black text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-800">
-          <Plus size={16} /> Create Combo / Package
-        </button>
+        <div>
+          <h2 className="text-2xl font-display font-bold text-white">Pricing & Packages</h2>
+          <p className="text-xs text-gray-400">Manage subscription plans, combos, and pricing cards displayed on the website.</p>
+        </div>
+        {!showAdd && (
+          <button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-2">
+            <Plus size={16} /> Create New Package
+          </button>
+        )}
       </div>
 
       {showAdd && (
         <div className="bg-gray-900/90 backdrop-blur-xl border-2 border-brand-purple rounded-xl shadow-lg p-6 mb-6">
-          <h3 className="font-bold text-lg mb-4 text-brand-purple flex items-center gap-2 border-b pb-4"><Tag size={20} /> New Package Config</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+          <h3 className="font-bold text-lg mb-4 text-brand-purple flex items-center gap-2 border-b border-gray-800 pb-4">
+            <Tag size={20} /> {editingId ? 'Edit Package' : 'New Package Configuration'}
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
             <div>
               <label className="label-sm">Package Name</label>
-              <input className="input-field bg-gray-900 border-gray-700 text-gray-200 focus:border-brand-purple" placeholder="e.g. SSC CGL + Railway Combo" value={newPkg.name} onChange={e => setNewPkg({ ...newPkg, name: e.target.value })} />
+              <input className="input-field" placeholder="e.g. 1 Year Premium" value={newPkg.name} onChange={e => setNewPkg({ ...newPkg, name: e.target.value })} />
             </div>
             <div>
-              <label className="label-sm">Price (₹)</label>
-              <input className="input-field bg-gray-900 border-gray-700 text-gray-200 focus:border-brand-purple" type="number" placeholder="499" value={newPkg.price} onChange={e => setNewPkg({ ...newPkg, price: e.target.value })} />
+              <label className="label-sm">Subtitle / Tagline</label>
+              <input className="input-field" placeholder="e.g. Best for Students" value={newPkg.subtitle} onChange={e => setNewPkg({ ...newPkg, subtitle: e.target.value })} />
             </div>
             <div>
-              <label className="label-sm">Duration</label>
-              <select className="input-field bg-gray-900 border-gray-700 text-gray-200 focus:border-brand-purple" value={newPkg.duration} onChange={e => setNewPkg({ ...newPkg, duration: e.target.value })}>
-                <option>Monthly</option>
-                <option>Yearly</option>
-                <option>Lifetime</option>
+              <label className="label-sm">Type</label>
+              <select className="input-field" value={newPkg.type} onChange={e => setNewPkg({ ...newPkg, type: e.target.value as any })}>
+                <option value="Student">Student Plan</option>
+                <option value="Institute">Institute / Bulk</option>
               </select>
             </div>
-            <div className="flex items-center gap-3 mt-6">
-              <input type="checkbox" className="w-5 h-5 accent-brand-purple" checked={newPkg.isCombo} onChange={e => setNewPkg({ ...newPkg, isCombo: e.target.checked })} />
-              <label className="font-bold text-gray-200">Is this a Combo Bundle?</label>
+
+            <div>
+              <label className="label-sm">Price (Amount)</label>
+              <input className="input-field" type="number" placeholder="499" value={newPkg.price} onChange={e => setNewPkg({ ...newPkg, price: e.target.value })} />
             </div>
+            <div>
+              <label className="label-sm">Currency Symbol</label>
+              <input className="input-field" placeholder="₹" value={newPkg.currency} onChange={e => setNewPkg({ ...newPkg, currency: e.target.value })} />
+            </div>
+            <div>
+              <label className="label-sm">Billing Period Text</label>
+              <input className="input-field" placeholder="e.g. / Year" value={newPkg.period} onChange={e => setNewPkg({ ...newPkg, period: e.target.value })} />
+            </div>
+
+            <div>
+              <label className="label-sm">Duration (Days)</label>
+              <input className="input-field" type="number" placeholder="365" value={newPkg.durationDays} onChange={e => setNewPkg({ ...newPkg, durationDays: Number(e.target.value) })} />
+            </div>
+            <div>
+              <label className="label-sm">CTA Button Text</label>
+              <input className="input-field" placeholder="Get Started" value={newPkg.buttonText} onChange={e => setNewPkg({ ...newPkg, buttonText: e.target.value })} />
+            </div>
+            <div>
+              <label className="label-sm">Ribbon Badge (Optional)</label>
+              <input className="input-field" placeholder="e.g. Best Value" value={newPkg.badge || ''} onChange={e => setNewPkg({ ...newPkg, badge: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="flex gap-6 mb-6 p-4 bg-gray-800/30 rounded-lg border border-gray-700">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" className="w-4 h-4 accent-brand-purple" checked={newPkg.isCombo} onChange={e => setNewPkg({ ...newPkg, isCombo: e.target.checked })} />
+              <span className="text-sm font-bold text-gray-300">Is Combo Pack?</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" className="w-4 h-4 accent-brand-purple" checked={newPkg.highlight} onChange={e => setNewPkg({ ...newPkg, highlight: e.target.checked })} />
+              <span className="text-sm font-bold text-gray-300">Highlight (Glow Effect)</span>
+            </label>
           </div>
 
           <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 mb-6">
-            <label className="label-sm mb-2">Include Features / Exams (Press Add)</label>
+            <label className="label-sm mb-2">Included Features (Features List)</label>
             <div className="flex gap-2 mb-3">
-              <input className="input-field bg-gray-900 border-gray-700 text-gray-200 focus:border-brand-purple" placeholder="e.g. Excel Practice Set, Word Typing" value={currentFeature} onChange={e => setCurrentFeature(e.target.value)} onKeyDown={e => e.key === 'Enter' && addFeature()} />
-              <button onClick={addFeature} className="bg-black text-white px-4 rounded font-bold text-xs">ADD</button>
+              <input className="input-field" placeholder="e.g. Unlimited Tests" value={currentFeature} onChange={e => setCurrentFeature(e.target.value)} onKeyDown={e => e.key === 'Enter' && addFeature()} />
+              <button onClick={addFeature} className="bg-black text-white px-4 rounded font-bold text-xs hover:bg-gray-800 transition-colors">ADD</button>
             </div>
             <div className="flex flex-wrap gap-2">
               {newPkg.features.map((f, i) => (
-                <span key={i} className="bg-gray-800 border border-gray-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 text-gray-200">
-                  {f} <button onClick={() => removeFeature(i)} className="text-red-500 hover:text-red-700">×</button>
+                <span key={i} className="bg-gray-800 border border-gray-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 text-gray-200 group">
+                  {f} <button onClick={() => removeFeature(i)} className="text-red-500 hover:text-red-400 group-hover:block ml-1">×</button>
                 </span>
               ))}
-              {newPkg.features.length === 0 && <span className="text-xs text-gray-400 italic">No features added yet.</span>}
+              {newPkg.features.length === 0 && <span className="text-xs text-gray-500 italic">No features added yet.</span>}
             </div>
           </div>
 
-          <div className="flex justify-end gap-3">
-            <button onClick={() => setShowAdd(false)} className="btn-secondary">Cancel</button>
-            <button onClick={handleSave} className="btn-primary">Create Package</button>
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-800">
+            <button onClick={resetForm} className="btn-secondary">Cancel</button>
+            <button onClick={handleSave} className="btn-primary px-8">Save Package</button>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {packages.map(p => (
-          <div key={p.id} className={`bg-gray-900/50 p-6 rounded-xl border shadow-sm relative group ${p.isCombo ? 'border-brand-purple/50 bg-brand-purple/5' : 'border-gray-800'}`}>
-            {p.isCombo && <div className="absolute top-0 right-0 bg-brand-purple text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">COMBO</div>}
-            <h3 className="font-bold text-lg text-gray-200">{p.name}</h3>
-            <div className="text-2xl font-display font-bold text-white mt-2">₹{p.price} <span className="text-sm text-gray-400 font-normal">/{p.duration}</span></div>
-            <ul className="mt-4 space-y-2">
-              {p.features?.map((f: string, i: number) => (
-                <li key={i} className="text-xs font-medium text-gray-400 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> {f}
-                </li>
+          <div key={p.id} className={`bg-gray-900/50 p-6 rounded-xl border relative group transition-all hover:-translate-y-1 ${p.highlight ? 'border-brand-purple shadow-lg shadow-purple-900/10' : 'border-gray-800 hover:border-gray-700'}`}>
+            {(p.badge || p.isCombo) && (
+              <div className={`absolute top-0 right-0 text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl text-white ${p.isCombo ? 'bg-gradient-to-r from-blue-600 to-cyan-600' : 'bg-brand-purple'}`}>
+                {p.badge || (p.isCombo ? 'COMBO' : '')}
+              </div>
+            )}
+
+            <div className="mt-2">
+              <h3 className="font-bold text-lg text-white">{p.name}</h3>
+              <p className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-4">{p.subtitle}</p>
+            </div>
+
+            <div className="flex items-baseline gap-1 mb-6">
+              <span className="text-lg font-bold text-gray-400">{p.currency}</span>
+              <span className="text-3xl font-display font-bold text-white">{p.price}</span>
+              <span className="text-xs text-gray-500 font-medium">{p.period}</span>
+            </div>
+
+            <div className="space-y-3 mb-6 min-h-[100px]">
+              {p.features?.slice(0, 4).map((f: string, i: number) => (
+                <div key={i} className="flex items-center gap-3 text-xs text-gray-300">
+                  <div className="w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center shrink-0">
+                    <Check size={10} className="text-green-400" />
+                  </div>
+                  <span className="line-clamp-1">{f}</span>
+                </div>
               ))}
-            </ul>
-            <button className="mt-6 w-full py-2 border border-gray-700 rounded-lg text-xs font-bold hover:bg-gray-800/30 text-gray-400">Edit Package</button>
+              {p.features?.length > 4 && <div className="text-xs text-gray-500 pl-8">+{p.features.length - 4} more features</div>}
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={() => handleEdit(p)} className="flex-1 py-2 border border-blue-900/50 bg-blue-900/10 text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-900/20 transition-colors flex items-center justify-center gap-2">
+                <Edit size={14} /> Edit
+              </button>
+              <button onClick={() => handleDelete(p.id)} className="flex-1 py-2 border border-red-900/50 bg-red-900/10 text-red-400 rounded-lg text-xs font-bold hover:bg-red-900/20 transition-colors flex items-center justify-center gap-2">
+                <Trash2 size={14} /> Delete
+              </button>
+            </div>
           </div>
         ))}
+        {packages.length === 0 && (
+          <div className="col-span-full py-20 text-center border-2 border-dashed border-gray-800 rounded-2xl">
+            <Tag size={48} className="mx-auto text-gray-700 mb-4" />
+            <h3 className="text-gray-400 font-bold mb-2">No Packages Found</h3>
+            <p className="text-gray-600 text-sm">Create your first subscription plan to get started.</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -3848,7 +4002,16 @@ const AdminPanel: React.FC = () => {
   if (error) return <div className="p-10 text-red-600">Error: {error} <button onClick={handleReset}>Reset</button></div>;
   if (!store) return <div className="p-10">Loading...</div>;
 
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, isAuthenticated, isAdmin } = useAuth();
+
+  // SECURE GUARD: Redirect if not authenticated or not admin
+  useEffect(() => {
+    if (!isAuthenticated || !isAdmin) {
+      navigate('/admin/login');
+    }
+  }, [isAuthenticated, isAdmin, navigate]);
+
+  if (!isAuthenticated || !isAdmin) return null; // Prevent rendering while redirecting
 
   // Dynamic Stats Calculation with safety guards
   const totalRevenue = (store?.payments || []).reduce((sum: number, p: any) => {
@@ -3890,6 +4053,7 @@ const AdminPanel: React.FC = () => {
           <SidebarItem id="content-library" activeTab={activeTab} setActiveTab={(id: string) => { setActiveTab(id); setMobileMenuOpen(false); }} icon={BookOpen} label="Paragraphs Library" />
           <SidebarItem id="cpt-tests" activeTab={activeTab} setActiveTab={(id: string) => { setActiveTab(id); setMobileMenuOpen(false); }} icon={FileSpreadsheet} label="CPT Management" />
           <SidebarItem id="ads" activeTab={activeTab} setActiveTab={(id: string) => { setActiveTab(id); setMobileMenuOpen(false); }} icon={Megaphone} label="Ads Manager" />
+          <SidebarItem id="pricing" activeTab={activeTab} setActiveTab={(id: string) => { setActiveTab(id); setMobileMenuOpen(false); }} icon={Tag} label="Pricing & Packages" />
 
           {store?.users && currentUser && (store.users.find((u: any) => u.id === currentUser?.id)?.role === 'Super Admin') && (
             <>
@@ -3958,6 +4122,7 @@ const AdminPanel: React.FC = () => {
             {activeTab === 'cpt-tests' && <CPTTestManager />}
             {activeTab === 'course-manager' && <CourseManager />}
             {activeTab === 'certificates' && <CertificateView templates={store.certificateTemplates} criteria={store.certificateCriteria} setCriteria={(c: any) => saveAdminStore({ ...store, certificateCriteria: c })} />}
+            {activeTab === 'pricing' && <PricingManager packages={store.packages || []} setPackages={(p: any) => saveAdminStore({ ...store, packages: p })} />}
 
           </div>
         </div>

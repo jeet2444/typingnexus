@@ -225,10 +225,17 @@ export interface Ad {
 export interface PricingPackage {
     id: number;
     name: string;
+    subtitle?: string; // NEW
     price: number;
+    currency: string;
+    period: string; // e.g. "/ Year"
     durationDays: number;
-    features: string[]; // List of features or exam IDs included
-    isCombo: boolean; // If true, might include specific combo logic
+    features: string[]; // List of features
+    isCombo: boolean;
+    highlight?: boolean; // Recommended/Best Value visual
+    badge?: string; // "Popular", "Best Value"
+    buttonText?: string;
+    type: 'Student' | 'Institute';
 }
 
 export interface BlogPost {
@@ -338,6 +345,7 @@ export interface SiteSettings {
     navLinks: { label: string; href: string; visible: boolean; subLinks?: { label: string; href: string; visible: boolean }[] }[];
     footerText: string;
     footerLinks: { label: string; href: string }[];
+    footerExams?: { label: string; href: string }[];
     socialLinks: { platform: string; url: string; visible: boolean }[];
     version?: number;
     showPracticeExams: boolean;
@@ -759,10 +767,16 @@ const INITIAL_SETTINGS: SiteSettings = {
     ],
     footerText: "TypingNexus - Your path to typing excellence",
     footerLinks: [
-        { label: "About Us", href: "/about" },
-        { label: "Contact", href: "/contact" },
-        { label: "Privacy Policy", href: "/privacy" },
-        { label: "Terms", href: "/terms" }
+        { label: "Home", href: "/" },
+        { label: "Practice", href: "/practice" },
+        { label: "Exams", href: "/practice-exams" },
+        { label: "Pricing", href: "/pricing" }
+    ],
+    footerExams: [
+        { label: "RSSB LDC / Junior Assistant", href: "/practice-exams" },
+        { label: "SSC CGL / CHSL", href: "/practice-exams" },
+        { label: "RRB NTPC / Group D", href: "/practice-exams" },
+        { label: "UPPCL / State PSC", href: "/practice-exams" }
     ],
     socialLinks: [
         { platform: "Facebook", url: "https://facebook.com", visible: true },
@@ -778,7 +792,7 @@ const INITIAL_SETTINGS: SiteSettings = {
     showRSSBPack: true,
     showGamification: true,
     showLeaderboard: true,
-    version: 15,
+    version: 16,
     heroTitle: "Welcome to TypingNexus",
     heroSubtitle: "Your ultimate platform for typing mastery.",
     heroCTAText: "Start Learning",
@@ -829,7 +843,65 @@ const INITIAL_NOTIFICATIONS: Notification[] = [];
 
 const INITIAL_PAYMENTS: AdminPayment[] = [];
 
-const INITIAL_PACKAGES: PricingPackage[] = [];
+const INITIAL_PACKAGES: PricingPackage[] = [
+    {
+        id: 1,
+        name: '1 Day Pass',
+        subtitle: 'Quick Revision',
+        price: 9,
+        currency: '₹',
+        period: '/ 24 Hours',
+        durationDays: 1,
+        features: ['Unlimited Practice Tests', 'All Exam Modules (Excel/Word)', 'Instant Result Analysis', 'Ad-free Experience', 'PDF Downloads'],
+        isCombo: false,
+        type: 'Student',
+        buttonText: 'Get 1 Day Pass'
+    },
+    {
+        id: 2,
+        name: '7 Day Booster',
+        subtitle: 'Weekly Practice',
+        price: 29,
+        currency: '₹',
+        period: '/ 7 Days',
+        durationDays: 7,
+        features: ['Everything in 1 Day Pass', '7 Days Validity', 'Priority Support', 'Daily Progress Tracking', 'Save up to 30%'],
+        isCombo: false,
+        highlight: true,
+        badge: 'Popular',
+        type: 'Student',
+        buttonText: 'Get 7 Day Booster'
+    },
+    {
+        id: 3,
+        name: '6 Month Saver',
+        subtitle: 'Semester Special',
+        price: 99,
+        currency: '₹',
+        period: '/ 6 Months',
+        durationDays: 180,
+        features: ['Same Price as 1 Month!', '180 Days Validity', 'Full Access to All Tests', 'Priority Support', 'Best for Semester Exams'],
+        isCombo: false,
+        highlight: true,
+        badge: 'Limited Offer',
+        type: 'Student',
+        buttonText: 'Get 6 Month Saver'
+    },
+    {
+        id: 4,
+        name: '1 Year Premium',
+        subtitle: 'Long Term Mastery',
+        price: 199,
+        currency: '₹',
+        period: '/ Year',
+        durationDays: 365,
+        features: ['Everything in Monthly Pro', '365 Days Validity', 'All Future Updates Included', 'Highest Priority Support', 'Save up to 80%'],
+        isCombo: false,
+        badge: 'Best Value',
+        type: 'Student',
+        buttonText: 'Get Yearly Premium'
+    }
+];
 
 // --- Store Implementation ---
 
@@ -985,7 +1057,10 @@ export const getAdminStore = (): AdminStore => {
                 // Ensure hero changes are reflected
                 heroTitle: defaultStore.settings.heroTitle,
                 heroCTAText: defaultStore.settings.heroCTAText,
-                heroCTALink: defaultStore.settings.heroCTALink
+                heroCTALink: defaultStore.settings.heroCTALink,
+                // Ensure footer links are updated
+                footerLinks: defaultStore.settings.footerLinks,
+                footerExams: defaultStore.settings.footerExams
             };
         }
 
@@ -1108,6 +1183,7 @@ export const syncSettingsFromHost = async () => {
             if (settingsData.settings) store.settings = { ...store.settings, ...settingsData.settings };
             if (settingsData.categories) store.categories = settingsData.categories;
             if (settingsData.plans) store.plans = settingsData.plans;
+            if (settingsData.packages) store.packages = settingsData.packages; // [NEW] Sync packages
             hasUpdates = true;
         }
 
@@ -1175,13 +1251,15 @@ const saveToApi = async (type: string, data: any) => {
 export const saveAdminStore = async (store: AdminStore) => {
     try {
         localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(store));
+        localStorage.setItem('ar_typing_sync_status', 'Saving...');
         window.dispatchEvent(new Event('adminStoreUpdate'));
 
         const results = await Promise.all([
             saveToApi('settings', {
                 settings: store.settings,
                 categories: store.categories,
-                plans: store.plans
+                plans: store.plans,
+                packages: store.packages // [NEW] Save packages
             }),
             saveToApi('content', {
                 exams: store.exams,
@@ -1196,9 +1274,18 @@ export const saveAdminStore = async (store: AdminStore) => {
             })
         ]);
 
-        return results.every(r => r === true);
+        const allSuccess = results.every(r => r === true);
+        if (allSuccess) {
+            localStorage.setItem('ar_typing_sync_status', `Synced: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+        } else {
+            localStorage.setItem('ar_typing_sync_status', 'Partial Save Fail');
+        }
+        window.dispatchEvent(new Event('adminStoreUpdate'));
+        return allSuccess;
     } catch (error: any) {
         console.error("Critical Save Error:", error);
+        localStorage.setItem('ar_typing_sync_status', 'Sync Failed');
+        window.dispatchEvent(new Event('adminStoreUpdate'));
         alert(`Failed to sync changes to server: ${error.message}\nYour changes are saved locally but won't appear on the website until sync is successful.`);
         return false;
     }

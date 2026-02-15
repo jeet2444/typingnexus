@@ -15,17 +15,43 @@ const GlobalAdLayout: React.FC = () => {
             setAds(store.ads || []);
         };
 
+        const performSync = () => {
+            import('../utils/adminStore').then(({ syncSettingsFromHost }) => {
+                syncSettingsFromHost().then((hasUpdates) => {
+                    if (hasUpdates) loadStoreData();
+                });
+            });
+        };
+
         loadStoreData();
 
-        // sync data from hostinger on mount to ensure freshness
-        import('../utils/adminStore').then(({ syncSettingsFromHost }) => {
-            syncSettingsFromHost().then((hasUpdates) => {
-                if (hasUpdates) loadStoreData();
-            });
-        });
+        // 1. Sync data from hostinger on mount
+        performSync();
+
+        // 2. Sync on tab focus (Visibility Change)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                console.log("[Sync] Tab became visible, refreshing data...");
+                performSync();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // 3. Heartbeat Sync (every 5 minutes)
+        const heartbeat = setInterval(() => {
+            console.log("[Sync] Heartbeat: refreshing data...");
+            performSync();
+        }, 5 * 60 * 1000);
 
         window.addEventListener('adminStoreUpdate', loadStoreData);
-        return () => window.removeEventListener('adminStoreUpdate', loadStoreData);
+        window.addEventListener('storage', loadStoreData);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            clearInterval(heartbeat);
+            window.removeEventListener('adminStoreUpdate', loadStoreData);
+            window.removeEventListener('storage', loadStoreData);
+        };
     }, []);
 
     return (

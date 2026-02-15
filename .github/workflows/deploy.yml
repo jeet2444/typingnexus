@@ -38,6 +38,14 @@ jobs:
         VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
 
+    # 2.5 Prepare Root Files for Deployment
+    - name: Copy Root Files to Dist
+      run: |
+        cp deploy.php dist/
+        cp .htaccess dist/
+        cp save_settings.php dist/
+
+
     # 3. Deploy Website to Main Domain
     # Configuring to usage explicit domain path which is safer for Hostinger
     # 3. Deploy Website to Main Domain

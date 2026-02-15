@@ -28,13 +28,18 @@ if (file_exists('.git')) {
 
     // 3. Attempt Git Pull
     if (function_exists('shell_exec')) {
-        echo "Updating known_hosts to trust github.com...\n";
+        echo "Updating known_hosts (optional)... \n";
+        // Try to add github to known_hosts, but we will also use StrictHostKeyChecking=no just in case
         shell_exec('mkdir -p ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts 2>&1');
 
         echo "Current Remotes:\n" . shell_exec('git remote -v 2>&1') . "\n";
 
-        echo "Attempting git pull...\n";
-        $output = shell_exec('git pull origin main 2>&1');
+        echo "Attempting git pull with StrictHostKeyChecking=no ...\n";
+
+        // Use GIT_SSH_COMMAND to ignore host key checking
+        $cmd = 'export GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"; git pull origin main 2>&1';
+        $output = shell_exec($cmd);
+
         echo "Output:\n" . ($output ?: "No output (maybe git pull failed silently)") . "\n";
 
         echo "\nLast Commit:\n" . shell_exec('git log -1 --pretty=format:"%h - %s (%cr)" 2>&1') . "\n";
@@ -45,13 +50,13 @@ if (file_exists('.git')) {
     echo "Warning: .git directory not found in the current folder.\n";
 }
 
-// 4. Verify dist folder
-if (is_dir('dist')) {
-    echo "dist/ folder exists.\n";
-    $files = scandir('dist');
-    echo "Files in dist/: " . count($files) . " items found.\n";
+// 4. Verify Deployment (Root)
+if (file_exists('index.html') && is_dir('assets')) {
+    echo "Deployment Verified: index.html and assets/ found in root.\n";
+    $files = scandir('assets');
+    echo "Files in assets/: " . count($files) . " items found.\n";
 } else {
-    echo "Error: dist/ folder NOT found. Please ensure your React build is uploaded.\n";
+    echo "Error: index.html or assets/ NOT found in root.\n";
 }
 
 // 5. Check Root Content

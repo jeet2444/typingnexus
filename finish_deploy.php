@@ -19,7 +19,11 @@ if (file_exists('dist/index.html')) {
     echo "Error: dist/index.html not found. Did the build finish?\n";
 }
 
-// 2. Create the data directory if missing
+// 2. Clear Caches
+echo "Clearing server-side caches...\n";
+include('clear_cache.php');
+
+// 3. Create the data directory if missing
 if (!is_dir('data')) {
     echo "Creating data directory...\n";
     mkdir('data', 0755, true);

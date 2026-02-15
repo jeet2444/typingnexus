@@ -27,9 +27,20 @@ const TypingPractice: React.FC = () => {
     } else {
       const articlesList = isHindi ? HINDI_ARTICLES : ENGLISH_ARTICLES;
 
-      // Select article based on ID. 
-      // Uses modulo to cycle through list if ID exceeds list length
-      const articleIndex = (Number(id) - 1) % articlesList.length;
+      // Parse ID: Handle "legacy-0", "legacy-hi-0", or just "0"
+      let parsedIndex = 0;
+      if (id?.startsWith('legacy-')) {
+        const parts = id.split('-');
+        parsedIndex = Number(parts[parts.length - 1]);
+      } else {
+        parsedIndex = Number(id) - 1; // Assuming direct IDs are 1-based if not legacy
+      }
+
+      // Validate parsedIndex
+      if (isNaN(parsedIndex)) parsedIndex = 0;
+
+      // Select article based on ID using modulo
+      const articleIndex = Math.abs(parsedIndex) % articlesList.length;
       baseText = articlesList[articleIndex] || articlesList[0];
     }
 

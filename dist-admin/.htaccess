@@ -1,11 +1,17 @@
+
+# SECURITY HEADERS & ROUTING FOR ADMIN PANEL
+<IfModule mod_headers.c>
+    # TELL GOOGLE TO GO AWAY
+    Header set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
   
-  # Universal SPA Routing (index.html fallback)
+  # SPA Routing
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteCond %{REQUEST_FILENAME} !-l
   RewriteRule . /index.html [L]
 </IfModule>

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://typingnexus.in/sitemap.xml

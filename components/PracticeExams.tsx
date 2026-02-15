@@ -224,7 +224,7 @@ const PracticeExams: React.FC = () => {
         ];
 
         return (
-            <div className="flex flex-wrap gap-4 mb-10">
+            <div className="flex overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap gap-4 mb-10 no-scrollbar">
                 {tabs.map(tab => (
                     <button
                         key={tab.id}

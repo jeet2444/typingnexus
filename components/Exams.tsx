@@ -156,7 +156,7 @@ const Exams: React.FC = () => {
                         <Search size={14} className="text-brand-purple font-bold" strokeWidth={3} />
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Popular Search Keywords</span>
                      </div>
-                     <div className="flex flex-wrap gap-2">
+                     <div className="flex flex-wrap gap-2 sm:gap-3">
                         {KEYWORDS.map(keyword => (
                            <button
                               key={keyword}

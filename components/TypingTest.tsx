@@ -1196,63 +1196,63 @@ const TypingTest: React.FC = () => {
         ) : (
           <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Result Card — matching reference layout */}
-            <div className="bg-white text-black rounded-xl overflow-hidden shadow-2xl border border-gray-300 p-8">
+            <div className="bg-white text-black rounded-xl overflow-hidden shadow-2xl border border-gray-300 p-4 sm:p-8">
               {/* Exam Info Row (Single Row) */}
-              <div className="flex flex-wrap justify-between items-center text-sm gap-y-4 mb-8 pb-4 border-b border-gray-100">
+              <div className="flex flex-col sm:flex-row flex-wrap justify-between items-start sm:items-center text-xs sm:text-sm gap-y-3 mb-8 pb-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-gray-800">Passage Title: </span>
-                  <span className="text-gray-500">{examTitle || 'Typing Assessment'}</span>
+                  <span className="font-bold text-gray-800 whitespace-nowrap">Passage Title: </span>
+                  <span className="text-gray-500 line-clamp-1">{examTitle || 'Typing Assessment'}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-gray-800">Time Duration: </span>
+                  <span className="font-bold text-gray-800 whitespace-nowrap">Time Duration: </span>
                   <span className="text-gray-500">{(activeProfile?.durationMin || Math.ceil((getTotalDuration()) / 60))}:00 min.</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-gray-800">Time Taken: </span>
+                  <span className="font-bold text-gray-800 whitespace-nowrap">Time Taken: </span>
                   <span className="text-gray-500">{testResult?.timeTaken} min.</span>
                 </div>
               </div>
 
               {/* Metric Cards Grid (4 Columns) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
                 {/* 1. Total Words Typed */}
-                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Words Typed</span>
-                    <Keyboard className="text-gray-400 group-hover:text-brand-purple transition-colors" size={24} />
+                <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-2 sm:mb-4">
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Total Words</span>
+                    <Keyboard className="text-gray-400 group-hover:text-brand-purple transition-colors hidden sm:block" size={24} />
                   </div>
-                  <div className="text-4xl font-black text-gray-900">{testResult?.totalWordsTyped}</div>
+                  <div className="text-2xl sm:text-4xl font-black text-gray-900">{testResult?.totalWordsTyped}</div>
                   <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-brand-purple transition-colors"></div>
                 </div>
 
                 {/* 2. Total Wrong Words */}
-                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Wrong Words</span>
-                    <XCircle className="text-gray-400 group-hover:text-red-500 transition-colors" size={24} />
+                <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-2 sm:mb-4">
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Wrong Words</span>
+                    <XCircle className="text-gray-400 group-hover:text-red-500 transition-colors hidden sm:block" size={24} />
                   </div>
-                  <div className="text-4xl font-black text-gray-900">{(testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0)}</div>
+                  <div className="text-2xl sm:text-4xl font-black text-gray-900">{(testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0)}</div>
                   <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-red-500 transition-colors"></div>
                 </div>
 
                 {/* 3. Net Correct Words */}
-                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Net Correct Words</span>
-                    <Check className="text-gray-400 group-hover:text-green-500 transition-colors" size={24} />
+                <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-2 sm:mb-4">
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Net Correct</span>
+                    <Check className="text-gray-400 group-hover:text-green-500 transition-colors hidden sm:block" size={24} />
                   </div>
-                  <div className="text-4xl font-black text-gray-900">{(testResult?.totalWordsTyped || 0) - ((testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0))}</div>
+                  <div className="text-2xl sm:text-4xl font-black text-gray-900">{(testResult?.totalWordsTyped || 0) - ((testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0))}</div>
                   <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-green-500 transition-colors"></div>
                 </div>
 
                 {/* 4. Marks Obtained */}
-                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Marks Obtained</span>
-                    <Award className="text-gray-400 group-hover:text-blue-500 transition-colors" size={24} />
+                <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-2 sm:mb-4">
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Marks</span>
+                    <Award className="text-gray-400 group-hover:text-blue-500 transition-colors hidden sm:block" size={24} />
                   </div>
-                  <div className="flex items-baseline gap-2">
-                    <div className="text-4xl font-black text-gray-900">
+                  <div className="flex items-baseline gap-1">
+                    <div className="text-2xl sm:text-4xl font-black text-gray-900">
                       {activeProfile ? calculateExamResult(activeProfile, {
                         totalKeystrokes: testResult?.keystrokes || 0,
                         correctKeystrokes: (testResult?.keystrokes || 0) - ((testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0)),
@@ -1263,49 +1263,49 @@ const TypingTest: React.FC = () => {
                         timeTakenSeconds: 0
                       }).marks : '0.00'}
                     </div>
-                    <span className="text-gray-400 font-bold">/ 50</span>
+                    <span className="text-[10px] text-gray-400 font-bold">/50</span>
                   </div>
                   <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-blue-500 transition-colors"></div>
                 </div>
 
                 {/* Row 2 */}
                 {/* 5. Gross Speed */}
-                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Gross Speed (wpm)</span>
-                    <Gauge className="text-gray-400 group-hover:text-amber-500 transition-colors" size={24} />
+                <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-2 sm:mb-4">
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Gross Speed</span>
+                    <Gauge className="text-gray-400 group-hover:text-amber-500 transition-colors hidden sm:block" size={24} />
                   </div>
-                  <div className="text-4xl font-black text-gray-900">{testResult?.grossWpm}</div>
+                  <div className="text-2xl sm:text-4xl font-black text-gray-900">{testResult?.grossWpm}</div>
                   <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-amber-500 transition-colors"></div>
                 </div>
 
                 {/* 6. Net Speed */}
-                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Net Speed ({activeProfile?.minEligibilityValue || 25} wpm)</span>
-                    <Zap className="text-gray-400 group-hover:text-green-600 transition-colors" size={24} />
+                <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-2 sm:mb-4">
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Net Speed</span>
+                    <Zap className="text-gray-400 group-hover:text-green-600 transition-colors hidden sm:block" size={24} />
                   </div>
-                  <div className="text-4xl font-black text-gray-900">{testResult?.netWpm}</div>
+                  <div className="text-2xl sm:text-4xl font-black text-gray-900">{testResult?.netWpm}</div>
                   <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-green-600 transition-colors"></div>
                 </div>
 
                 {/* 7. Backspace Count */}
-                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Backspace Count</span>
-                    <Delete className="text-gray-400 group-hover:text-blue-500 transition-colors" size={24} />
+                <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-2 sm:mb-4">
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Backspaces</span>
+                    <Delete className="text-gray-400 group-hover:text-blue-500 transition-colors hidden sm:block" size={24} />
                   </div>
-                  <div className="text-4xl font-black text-gray-900">{testResult?.backspaceCount}</div>
+                  <div className="text-2xl sm:text-4xl font-black text-gray-900">{testResult?.backspaceCount}</div>
                   <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 group-hover:bg-blue-500 transition-colors"></div>
                 </div>
 
                 {/* 8. Status */}
-                <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status</span>
-                    <Target className="text-gray-400 group-hover:text-purple-600 transition-colors" size={24} />
+                <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-2 sm:mb-4">
+                    <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Status</span>
+                    <Target className="text-gray-400 group-hover:text-purple-600 transition-colors hidden sm:block" size={24} />
                   </div>
-                  <div className={`text-2xl font-black mt-2 ${activeProfile && calculateExamResult(activeProfile, {
+                  <div className={`text-xl sm:text-2xl font-black mt-1 sm:mt-2 ${activeProfile && calculateExamResult(activeProfile, {
                     totalKeystrokes: testResult?.keystrokes || 0,
                     correctKeystrokes: (testResult?.keystrokes || 0) - ((testResult?.fullMistakes || 0) + (testResult?.halfMistakes || 0)),
                     backspaceCount: testResult?.backspaceCount || 0,
@@ -1380,16 +1380,16 @@ const TypingTest: React.FC = () => {
               <div className="animate-in fade-in zoom-in-95 duration-500">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Original Passage */}
-                  <div className="bg-white border-2 border-gray-100 rounded-2xl shadow-xl overflow-hidden">
-                    <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                      <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest">Original Passage</h4>
+                  <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
+                    <div className="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex justify-between items-center">
+                      <h4 className="text-[10px] sm:text-xs font-black text-gray-500 uppercase tracking-widest">Original Passage</h4>
                       <Clock size={16} className="text-gray-300" />
                     </div>
-                    <div className="p-8 bg-white text-gray-800 leading-[2.5] font-mono text-base h-[500px] overflow-y-auto custom-scrollbar">
+                    <div className="p-4 sm:p-8 bg-white text-gray-800 leading-[2.2] sm:leading-[2.5] font-mono text-sm sm:text-base h-[300px] sm:h-[500px] overflow-y-auto custom-scrollbar">
                       {calculateDetailedStats().alignment.map((item, idx) => (
                         <span
                           key={idx}
-                          className={`mr-2.5 px-0.5 rounded ${item.status === 'mismatch' ? 'bg-red-100 text-red-600 line-through decoration-2' :
+                          className={`mr-2 px-0.5 rounded ${item.status === 'mismatch' ? 'bg-red-100 text-red-600 line-through decoration-2' :
                             item.status === 'missed' ? 'bg-amber-100 text-amber-700' : ''}`}
                         >
                           {item.original || ''}
@@ -1399,16 +1399,16 @@ const TypingTest: React.FC = () => {
                   </div>
 
                   {/* Typed Passage */}
-                  <div className="bg-white border-2 border-gray-100 rounded-2xl shadow-xl overflow-hidden">
-                    <div className="bg-teal-50 px-6 py-4 border-b border-teal-100 flex justify-between items-center">
-                      <h4 className="text-xs font-black text-teal-600 uppercase tracking-widest">Typed Passage</h4>
+                  <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
+                    <div className="bg-teal-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-teal-100 flex justify-between items-center">
+                      <h4 className="text-[10px] sm:text-xs font-black text-teal-600 uppercase tracking-widest">Typed Passage</h4>
                       <Target size={16} className="text-teal-300" />
                     </div>
-                    <div className="p-8 bg-teal-50/10 text-gray-800 leading-[2.5] font-mono text-base h-[500px] overflow-y-auto custom-scrollbar">
+                    <div className="p-4 sm:p-8 bg-teal-50/10 text-gray-800 leading-[2.2] sm:leading-[2.5] font-mono text-sm sm:text-base h-[300px] sm:h-[500px] overflow-y-auto custom-scrollbar">
                       {calculateDetailedStats().alignment.map((item, idx) => (
                         <span
                           key={idx}
-                          className={`mr-2.5 px-0.5 rounded ${item.status === 'match' ? 'text-teal-700' :
+                          className={`mr-2 px-0.5 rounded ${item.status === 'match' ? 'text-teal-700' :
                             item.status === 'mismatch' ? 'bg-red-500 text-white shadow-sm' :
                               item.status === 'extra' ? 'bg-purple-100 text-purple-700' : ''}`}
                         >
